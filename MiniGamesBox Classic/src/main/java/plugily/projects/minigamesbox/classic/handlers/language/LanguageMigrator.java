@@ -95,7 +95,7 @@ public class LanguageMigrator {
     for(CoreFileVersion coreFileVersion : CoreFileVersion.values()) {
       String fileName = coreFileVersion.name().toLowerCase();
       int newVersion = coreFileVersion.getVersion();
-      File file = new File(plugin.getDataFolder() + "/" + fileName + ".yml");
+      File file = new File(plugin.getDataFolder(), fileName + ".yml");
       FileConfiguration configuration = ConfigUtils.getConfig(plugin, fileName, false);
       if(configuration == null) {
         continue;

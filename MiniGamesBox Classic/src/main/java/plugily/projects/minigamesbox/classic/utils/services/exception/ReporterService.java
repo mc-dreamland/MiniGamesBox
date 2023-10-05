@@ -48,23 +48,6 @@ public class ReporterService {
   }
 
   public void reportException() {
-    try {
-      URL url = new URL("https://api.plugily.xyz/error/report.php");
-      HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-      conn.setRequestMethod("POST");
-      conn.setRequestProperty("User-Agent", "PLService/1.0");
-      conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-      conn.setDoOutput(true);
-
-      OutputStream os = conn.getOutputStream();
-      os.write(("pass=servicereporter&type=" + pluginName + "&pluginversion=" + pluginVersion + "&serverversion=" + serverVersion + "&error=" + error).getBytes(StandardCharsets.UTF_8));
-      os.flush();
-      os.close();
-
-      plugin.getLogger().log(Level.WARNING, "[Reporter service] Error reported!");
-      plugin.getDebugger().debug(Level.INFO, "[Reporter service] Code: {0} ({1})", conn.getResponseCode(), conn.getResponseMessage());
-    } catch(IOException ignored) {/*cannot connect or there is a problem*/
-    }
   }
 
 }
