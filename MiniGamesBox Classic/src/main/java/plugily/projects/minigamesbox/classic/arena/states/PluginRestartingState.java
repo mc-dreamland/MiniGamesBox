@@ -58,15 +58,19 @@ public class PluginRestartingState implements ArenaStateHandler {
         PluginArenaUtils.resetPlayerAfterGame(arena, player);
         new MessageBuilder("COMMANDS_TELEPORTED_TO_LOBBY").asKey().player(player).arena(arena).sendPlayer();
       }
-      arena.getMapRestorerManager().fullyRestoreArena();
       if(plugin.getConfigPreferences().getOption("BUNGEEMODE")) {
-        if(ConfigUtils.getConfig(plugin, "bungee").getBoolean("Shutdown-When-Game-Ends")) {
+        if (ConfigUtils.getConfig(plugin, "bungee").getBoolean("Shutdown-When-Game-Ends")) {
           plugin.getServer().shutdown();
+          plugin.getDebugger().performance("ArenaUpdate", "END Arena {0} Running state {1} value for state {2} and time {3}", arena.getId(), ArenaState.RESTARTING, arenaState, arenaTimer);
+          return;
         }
+        arena.getMapRestorerManager().fullyRestoreArena();
         plugin.getArenaRegistry().shuffleBungeeArena();
-        for(Player player : Bukkit.getOnlinePlayers()) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
           plugin.getArenaManager().joinAttempt(player, plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena()));
         }
+      } else {
+        arena.getMapRestorerManager().fullyRestoreArena();
       }
       arenaTimer = plugin.getConfig().getInt("Time-Manager.Waiting", 20);
       arenaState = ArenaState.WAITING_FOR_PLAYERS;

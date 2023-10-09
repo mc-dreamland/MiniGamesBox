@@ -412,6 +412,7 @@ public class PluginArena extends BukkitRunnable {
   }
 
   public void teleportToEndLocation(Player player) {
+    VersionUtils.teleport(player, getEndLocation());
     // We should check for #isEnabled to make sure plugin is enabled
     // This happens in some cases
     if(plugin.isEnabled() && plugin.getConfigPreferences().getOption("BUNGEEMODE")
@@ -419,7 +420,6 @@ public class PluginArena extends BukkitRunnable {
       plugin.getBungeeManager().connectToHub(player);
       plugin.getDebugger().debug("{0} has left the arena {1}! Teleported to the Hub server.", player.getName(), this);
     }
-    VersionUtils.teleport(player, getEndLocation());
   }
 
   public Location getEndLocation() {
