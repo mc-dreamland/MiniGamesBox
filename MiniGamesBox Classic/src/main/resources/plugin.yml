@@ -16,6 +16,8 @@ commands:
     aliases: [ PlugilyProjectsa, PlugilyProjectsadmin ]
 
 permissions:
+  PlugilyProjects.join.*:
+    default: true
   PlugilyProjects.admin.*:
     default: op
     children:
