@@ -44,7 +44,7 @@ public class ChatEvents implements Listener {
   }
 
   @EventHandler
-  public void onChatIngame(AsyncPlayerChatEvent event) {
+  public void onChatInGame(AsyncPlayerChatEvent event) {
     PluginArena arena = plugin.getArenaRegistry().getArena(event.getPlayer());
     if (arena == null) {
       if (!plugin.getConfigPreferences().getOption("SEPARATE_ARENA_CHAT")) {
@@ -73,7 +73,7 @@ public class ChatEvents implements Listener {
   }
 
   private String formatChatPlaceholders(User user, PluginArena arena) {
-    String formatted = new MessageBuilder("IN_GAME_GAME_CHAT_FORMAT").asKey().arena(arena).player(user.getPlayer()).build();
+    String formatted = new MessageBuilder("IN_GAME_GAME_CHAT_FORMAT").asKey().getRaw();
     if (user.isSpectator()) {
       if (formatted.contains("%kit%")) {
         formatted =
@@ -89,6 +89,7 @@ public class ChatEvents implements Listener {
         formatted = StringUtils.replace(formatted, "%kit%", user.getKit().getName());
       }
     }
+    formatted = StringUtils.replace(formatted, "%player%", "%1$s");
     formatted = StringUtils.replace(formatted, "%message%", "%2$s");
     // notice - unresolved % could throw UnknownFormatException
     return formatted;

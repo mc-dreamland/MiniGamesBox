@@ -231,7 +231,7 @@ public class PluginArenaManager {
 
     User user = plugin.getUserManager().getUser(player);
 
-    if(arena.getArenaState() != ArenaState.WAITING_FOR_PLAYERS && arena.getArenaState() != ArenaState.STARTING && (arena.getPlayers().isEmpty() || arena.getPlayers().size() < arena.getMinimumPlayers())) {
+    if(arena.getArenaState() != ArenaState.WAITING_FOR_PLAYERS && arena.getArenaState() != ArenaState.STARTING && arena.getPlayers().isEmpty()) {
       stopGame(true, arena);
     }
     if(!user.isSpectator()) {
