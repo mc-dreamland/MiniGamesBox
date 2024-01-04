@@ -63,7 +63,7 @@ public class MysqlManager implements UserDatabase {
   }
 
   public static void unload(UUID uniqueId) {
-    isloaded.add(uniqueId);
+    isloaded.remove(uniqueId);
   }
 
   private void initializeTable(PluginMain plugin) {
@@ -174,7 +174,7 @@ public class MysqlManager implements UserDatabase {
       setUserStat(user, statisticType, resultSet.getInt(statisticType.getName()));
     }
     plugin.getDebugger().debug("Loaded User Stats for {0}", user.getPlayer().getName());
-    this.isloaded.add(user.getPlayer().getUniqueId());
+    isloaded.add(user.getPlayer().getUniqueId());
   }
 
   /**
