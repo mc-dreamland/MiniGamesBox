@@ -50,7 +50,7 @@ public class MysqlManager implements UserDatabase {
 
   public MysqlManager(PluginMain plugin) {
     this.plugin = plugin;
-    this.isloaded = new ArrayList<>();
+    isloaded = new ArrayList<>();
     this.createTableStatement = "CREATE TABLE IF NOT EXISTS `" + getTableName() + "` (`UUID` char(36) NOT NULL PRIMARY KEY, `name` varchar(32) NOT NULL);";
     FileConfiguration config = ConfigUtils.getConfig(plugin, "mysql");
     database = new MysqlDatabase(config.getString("user"), config.getString("password"), config.getString("address"), config.getLong("maxLifeTime", 1800000));
@@ -60,6 +60,10 @@ public class MysqlManager implements UserDatabase {
 
   public static boolean isload(UUID uniqueId) {
     return isloaded.contains(uniqueId);
+  }
+
+  public static void unload(UUID uniqueId) {
+    isloaded.add(uniqueId);
   }
 
   private void initializeTable(PluginMain plugin) {
