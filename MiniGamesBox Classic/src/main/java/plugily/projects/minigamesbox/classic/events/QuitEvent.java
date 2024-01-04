@@ -26,6 +26,7 @@ import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.arena.PluginArena;
 import plugily.projects.minigamesbox.classic.handlers.items.SpecialItem;
 import plugily.projects.minigamesbox.classic.user.User;
+import plugily.projects.minigamesbox.classic.user.data.MysqlManager;
 
 /**
  * @author Tigerpanzer_02
@@ -34,35 +35,35 @@ import plugily.projects.minigamesbox.classic.user.User;
  */
 public class QuitEvent implements Listener {
 
-  private final PluginMain plugin;
+    private final PluginMain plugin;
 
-  public QuitEvent(PluginMain plugin) {
-    this.plugin = plugin;
-    plugin.getServer().getPluginManager().registerEvents(this, plugin);
-  }
-
-  @EventHandler
-  public void onQuit(PlayerQuitEvent event) {
-    onQuit(event.getPlayer());
-  }
-
-  @EventHandler
-  public void onKick(PlayerKickEvent event) {
-    onQuit(event.getPlayer());
-  }
-
-  private void onQuit(Player player) {
-    plugin
-        .getSpecialItemManager()
-        .removeSpecialItemsOfStage(player, SpecialItem.DisplayStage.SERVER_JOIN);
-    PluginArena arena = plugin.getArenaRegistry().getArena(player);
-    if (arena != null) {
-      plugin.getArenaManager().leaveAttempt(player, arena);
+    public QuitEvent(PluginMain plugin) {
+        this.plugin = plugin;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
-    User user = plugin.getUserManager().getUser(player);
-    plugin.getUserManager().saveAllStatistic(user);
-    plugin.getUserManager().removeUser(user);
 
-    plugin.getArgumentsRegistry().getSpyChat().disableSpyChat(player);
-  }
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        onQuit(event.getPlayer());
+    }
+
+    @EventHandler
+    public void onKick(PlayerKickEvent event) {
+        onQuit(event.getPlayer());
+    }
+
+    private void onQuit(Player player) {
+        plugin.getSpecialItemManager().removeSpecialItemsOfStage(player, SpecialItem.DisplayStage.SERVER_JOIN);
+        PluginArena arena = plugin.getArenaRegistry().getArena(player);
+        if (arena != null) {
+            plugin.getArenaManager().leaveAttempt(player, arena);
+        }
+        User user = plugin.getUserManager().getUser(player);
+        if (MysqlManager.isload(player.getUniqueId())) {//只有已经加载了数据的玩家才可以在退出时保存数据
+            plugin.getUserManager().saveAllStatistic(user);
+        }
+        plugin.getUserManager().removeUser(user);
+
+        plugin.getArgumentsRegistry().getSpyChat().disableSpyChat(player);
+    }
 }
