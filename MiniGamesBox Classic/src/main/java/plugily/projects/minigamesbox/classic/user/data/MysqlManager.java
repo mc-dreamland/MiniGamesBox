@@ -173,8 +173,10 @@ public class MysqlManager implements UserDatabase {
       }
       setUserStat(user, statisticType, resultSet.getInt(statisticType.getName()));
     }
-    plugin.getDebugger().debug("Loaded User Stats for {0}", user.getPlayer().getName());
-    isloaded.add(user.getPlayer().getUniqueId());
+    if (user!=null){
+      plugin.getDebugger().debug("Loaded User Stats for {0}", user.getPlayer().getName());
+      isloaded.add(user.getPlayer().getUniqueId());
+    }
   }
 
   /**
