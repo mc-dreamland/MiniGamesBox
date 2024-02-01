@@ -110,9 +110,9 @@ public class MysqlManager implements UserDatabase {
   @Override
   public void dropColumn(String columnName) {
     Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-          database.executeUpdate("ALTER TABLE " + getTableName() + " DROP COLUMN " + columnName + ";");
-          plugin.getDebugger().debug("MySQL Table | Dropped column {0}", columnName);
-        }
+              database.executeUpdate("ALTER TABLE " + getTableName() + " DROP COLUMN " + columnName + ";");
+              plugin.getDebugger().debug("MySQL Table | Dropped column {0}", columnName);
+            }
     );
   }
 
@@ -132,7 +132,7 @@ public class MysqlManager implements UserDatabase {
   @Override
   public void saveAllStatistic(User user) {
     if (!isload(user.getUniqueId())) {
-        plugin.getLogger().warning("³¢ÊÔÔÚ±£´æÒ»¸öÎ´¼ÓÔØÊý¾ÝµÄÍæ¼Ò");
+      plugin.getLogger().warning("å°è¯•åœ¨ä¿å­˜ä¸€ä¸ªæœªåŠ è½½æ•°æ®çš„çŽ©å®¶");
     }else{
       try {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> database.executeUpdate(getUpdateQuery(user)));
