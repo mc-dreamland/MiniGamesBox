@@ -131,11 +131,16 @@ public class MysqlManager implements UserDatabase {
 
   @Override
   public void saveAllStatistic(User user) {
-    try {
-      Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> database.executeUpdate(getUpdateQuery(user)));
-    } catch(IllegalPluginAccessException ignored) {
-      database.executeUpdate(getUpdateQuery(user));
+    if (!isload(user.getUniqueId())) {
+        plugin.getLogger().warning("尝试在保存一个未加载数据的玩家");
+    }else{
+      try {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> database.executeUpdate(getUpdateQuery(user)));
+      } catch(IllegalPluginAccessException ignored) {
+        database.executeUpdate(getUpdateQuery(user));
+      }
     }
+
   }
 
   @Override
