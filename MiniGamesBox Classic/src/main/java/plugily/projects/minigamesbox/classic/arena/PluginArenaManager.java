@@ -73,7 +73,7 @@ public class PluginArenaManager {
 
     arena.getPlayers().add(player);
 
-    if(arena.getArenaState() == ArenaState.IN_GAME || arena.getArenaState().isStartingStage(arena) || arena.getArenaState() == ArenaState.ENDING) {
+    if(arena.getArenaState() == ArenaState.IN_GAME || arena.getArenaState() == ArenaState.ENDING) {
       if(!plugin.getConfigPreferences().getOption("SPECTATORS")) {
         new MessageBuilder("IN_GAME_SPECTATOR_BLOCKED").asKey().player(player).arena(arena).sendPlayer();
         return;

@@ -140,13 +140,12 @@ public class MysqlManager implements UserDatabase {
         String playerName = user.getPlayer() == null ? Bukkit.getOfflinePlayer(uuid).getName() : user.getPlayer().getName();
         if (!uuid.equals(playerName)) {
           PreparedStatement preparedStatement = connection.prepareStatement("UPDATE " + getTableName() + " SET name = ? WHERE UUID = ?");
-          preparedStatement.setString(0, getTableName());
           preparedStatement.setString(1, playerName);
           preparedStatement.setString(2, uuid);
           preparedStatement.executeUpdate();
         }
         PreparedStatement selectStatement = connection.prepareStatement("SELECT * from " + getTableName() + " WHERE UUID = ?");
-        selectStatement.setString(0, uuid);
+        selectStatement.setString(1, uuid);
         ResultSet resultSet = selectStatement.executeQuery();
         if(resultSet.next()) {
           loadUserStats(user, resultSet);
