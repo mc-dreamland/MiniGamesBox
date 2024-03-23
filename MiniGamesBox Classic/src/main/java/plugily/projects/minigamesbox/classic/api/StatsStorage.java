@@ -58,12 +58,12 @@ public class StatsStorage {
     plugin.getPlaceholderManager().registerPlaceholder(new Placeholder("user_statistic_" + statisticType.getName(), Placeholder.PlaceholderExecutor.ALL) {
       @Override
       public String getValue(Player player) {
-        return Integer.toString(getUserStats(player, statisticType));
+        return Long.toString(getUserStats(player, statisticType));
       }
 
       @Override
       public String getValue(Player player, PluginArena arena) {
-        return Integer.toString(getUserStats(player, statisticType));
+        return Long.toString(getUserStats(player, statisticType));
       }
     });
   }
@@ -74,7 +74,7 @@ public class StatsStorage {
    * @param stat Statistic type to get (kills, deaths etc.)
    * @return Map of UUID keys and Integer values sorted in ascending order of requested statistic type
    */
-  public Map<UUID, Integer> getStats(StatisticType stat) {
+  public Map<UUID, Long> getStats(StatisticType stat) {
     return plugin.getUserManager().getDatabase().getStats(stat);
   }
 
@@ -86,7 +86,7 @@ public class StatsStorage {
    * @return int of statistic
    * @see StatisticType
    */
-  public int getUserStats(Player player, StatisticType statisticType) {
+  public long getUserStats(Player player, StatisticType statisticType) {
     return plugin.getUserManager().getUser(player).getStatistic(statisticType);
   }
 

@@ -67,7 +67,7 @@ public class LeaderboardArgument {
   }
 
   private void printLeaderboard(CommandSender sender, StatisticType statisticType) {
-    java.util.Map<UUID, Integer> stats = registry.getPlugin().getStatsStorage().getStats(statisticType);
+    java.util.Map<UUID, Long> stats = registry.getPlugin().getStatsStorage().getStats(statisticType);
     new MessageBuilder("LEADERBOARD_TYPE_CHAT_TOP_HEADER").asKey().send(sender);
     String statistic = StringUtils.capitalize(statisticType.getName().toLowerCase().replace('_', ' '));
     UUID[] array = stats.keySet().toArray(new UUID[0]);
@@ -80,7 +80,7 @@ public class LeaderboardArgument {
         if(name == null) {
           name = "Unknown Player";
         }
-        sender.sendMessage(formatMessage(statistic, name, position, stats.get(current)));
+        sender.sendMessage(formatMessage(statistic, name, position, Math.toIntExact(stats.get(current))));
       }
     }
   }

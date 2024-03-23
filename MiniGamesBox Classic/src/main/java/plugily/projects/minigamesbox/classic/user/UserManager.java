@@ -109,7 +109,7 @@ public class UserManager {
     if(user.getStatistic(nextLevelExp) < user.getStatistic(plugin.getStatsStorage().getStatisticType("EXP"))) {
       user.adjustStatistic(plugin.getStatsStorage().getStatisticType("LEVEL"), 1);
 
-      int level = user.getStatistic(plugin.getStatsStorage().getStatisticType("LEVEL"));
+      int level = (int) user.getStatistic(plugin.getStatsStorage().getStatisticType("LEVEL"));
 
       user.setStatistic(nextLevelExp, (int) Math.ceil(Math.pow(50.0 * level, 1.5)));
 

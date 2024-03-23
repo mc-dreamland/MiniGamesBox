@@ -80,7 +80,7 @@ public class AdjustStatisticArgument {
           } else {
             user.adjustStatistic(statisticType, opt.get());
           }
-          new MessageBuilder("COMMANDS_ADMIN_ADJUST_STATISTIC").asKey().player(target).value(statisticType.getName()).integer(user.getStatistic(statisticType)).send(sender);
+          new MessageBuilder("COMMANDS_ADMIN_ADJUST_STATISTIC").asKey().player(target).value(statisticType.getName()).integer((int)user.getStatistic(statisticType)).send(sender);
         } else {
           new MessageBuilder("COMMANDS_WRONG_USAGE").asKey().value("/" + registry.getPlugin().getCommandAdminPrefix() + " statistic &6<adjust/set> <statistic> <amount> &c[player]").send(sender);
         }

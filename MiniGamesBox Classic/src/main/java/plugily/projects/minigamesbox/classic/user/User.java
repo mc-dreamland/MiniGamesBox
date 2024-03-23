@@ -44,7 +44,7 @@ public class User {
   private boolean spectator = false;
   private boolean permanentSpectator = false;
   private Kit kit = plugin.getKitRegistry().getDefaultKit();
-  private final Map<StatisticType, Integer> stats = new HashMap<>();
+  private final Map<StatisticType, Long> stats = new HashMap<>();
   private final Map<String, Double> cooldowns = new HashMap<>();
   private boolean dataInitialized = false;
 
@@ -109,23 +109,23 @@ public class User {
     this.permanentSpectator = permanentSpectator;
   }
 
-  public int getStatistic(String statistic) {
+  public long getStatistic(String statistic) {
     return getStatistic(plugin.getStatsStorage().getStatisticType(statistic.toUpperCase()));
   }
 
-  public int getStatistic(StatisticType statisticType) {
-    return stats.computeIfAbsent(statisticType, t -> 0);
+  public long getStatistic(StatisticType statisticType) {
+    return stats.computeIfAbsent(statisticType, t -> 0L);
   }
 
-  public void setStatistic(StatisticType statisticType, int value) {
+  public void setStatistic(StatisticType statisticType, long value) {
     changeUserStatistic(statisticType, value);
   }
 
-  public void setStatistic(String statistic, int value) {
+  public void setStatistic(String statistic, long value) {
     changeUserStatistic(plugin.getStatsStorage().getStatisticType(statistic), value);
   }
 
-  private void changeUserStatistic(StatisticType statisticType, int value) {
+  private void changeUserStatistic(StatisticType statisticType, long value) {
     stats.put(statisticType, value);
 
     Player player = getPlayer();
@@ -135,16 +135,16 @@ public class User {
 
       //statistics manipulation events are called async when using mysql
       Bukkit.getScheduler().runTask(plugin, () -> {
-        Bukkit.getPluginManager().callEvent(new PlugilyPlayerStatisticChangeEvent(plugin.getArenaRegistry().getArena(player), player, statisticType, value));
+        Bukkit.getPluginManager().callEvent(new PlugilyPlayerStatisticChangeEvent(plugin.getArenaRegistry().getArena(player), player, statisticType, (int) value));
       });
     }
   }
 
-  public void adjustStatistic(StatisticType statisticType, int value) {
+  public void adjustStatistic(StatisticType statisticType, long value) {
     changeUserStatistic(statisticType, getStatistic(statisticType) + value);
   }
 
-  public void adjustStatistic(String statistic, int value) {
+  public void adjustStatistic(String statistic, long value) {
     StatisticType statisticType = plugin.getStatsStorage().getStatisticType(statistic);
     changeUserStatistic(statisticType, getStatistic(statisticType) + value);
   }
