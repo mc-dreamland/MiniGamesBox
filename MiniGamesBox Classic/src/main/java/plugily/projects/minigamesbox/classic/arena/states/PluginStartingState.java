@@ -107,7 +107,8 @@ public class PluginStartingState implements ArenaStateHandler {
         player.getInventory().clear();
         player.setGameMode(GameMode.SURVIVAL);
         User user = plugin.getUserManager().getUser(player);
-        if(plugin.getConfigPreferences().getOption("KITS")) {
+        if (user.isSpectator()) continue;
+        if (plugin.getConfigPreferences().getOption("KITS")) {
           user.getKit().giveKitItems(player);
         }
         player.updateInventory();

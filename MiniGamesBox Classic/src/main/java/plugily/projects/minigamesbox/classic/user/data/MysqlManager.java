@@ -29,10 +29,7 @@ import plugily.projects.minigamesbox.classic.api.StatisticType;
 import plugily.projects.minigamesbox.classic.user.User;
 import plugily.projects.minigamesbox.classic.utils.configuration.ConfigUtils;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -103,9 +100,9 @@ public class MysqlManager implements UserDatabase {
   @Override
   public void dropColumn(String columnName) {
     Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-          database.executeUpdate("ALTER TABLE " + getTableName() + " DROP COLUMN " + columnName + ";");
-          plugin.getDebugger().debug("MySQL Table | Dropped column {0}", columnName);
-        }
+              database.executeUpdate("ALTER TABLE " + getTableName() + " DROP COLUMN " + columnName + ";");
+              plugin.getDebugger().debug("MySQL Table | Dropped column {0}", columnName);
+            }
     );
   }
 
@@ -124,6 +121,10 @@ public class MysqlManager implements UserDatabase {
 
   @Override
   public void saveAllStatistic(User user) {
+    if (!user.isDataInitialized()) {
+      plugin.getLogger().warning("Trying save a not loaded player!");
+      return;
+    }
     try {
       Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> database.executeUpdate(getUpdateQuery(user)));
     } catch(IllegalPluginAccessException ignored) {
@@ -137,9 +138,16 @@ public class MysqlManager implements UserDatabase {
       String uuid = user.getUniqueId().toString();
       try(Connection connection = database.getConnection(); Statement statement = connection.createStatement()) {
         String playerName = user.getPlayer() == null ? Bukkit.getOfflinePlayer(uuid).getName() : user.getPlayer().getName();
-
-        database.executeUpdate("UPDATE " + getTableName() + " SET name='" + playerName + "' WHERE UUID='" + uuid + "';");
-        ResultSet resultSet = statement.executeQuery("SELECT * from " + getTableName() + " WHERE UUID='" + uuid + "'");
+        if (!uuid.equals(playerName)) {
+          PreparedStatement preparedStatement = connection.prepareStatement("UPDATE " + getTableName() + " SET name = ? WHERE UUID = ?");
+          preparedStatement.setString(0, getTableName());
+          preparedStatement.setString(1, playerName);
+          preparedStatement.setString(2, uuid);
+          preparedStatement.executeUpdate();
+        }
+        PreparedStatement selectStatement = connection.prepareStatement("SELECT * from " + getTableName() + " WHERE UUID = ?");
+        selectStatement.setString(0, uuid);
+        ResultSet resultSet = selectStatement.executeQuery();
         if(resultSet.next()) {
           loadUserStats(user, resultSet);
         } else {
@@ -166,6 +174,7 @@ public class MysqlManager implements UserDatabase {
       }
       setUserStat(user, statisticType, resultSet.getInt(statisticType.getName()));
     }
+    user.setDataInitialized(true);
     plugin.getDebugger().debug("Loaded User Stats for {0}", user.getPlayer().getName());
   }
 

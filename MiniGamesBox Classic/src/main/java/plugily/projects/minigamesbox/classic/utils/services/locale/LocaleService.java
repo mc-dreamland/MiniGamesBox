@@ -49,9 +49,8 @@ public class LocaleService {
       return;
     }
     this.plugin = plugin;
-    try(Scanner scanner = new Scanner(requestLocaleFetch(null), StandardCharsets.UTF_8).useDelimiter("\\A")) {
-      String data = scanner.hasNext() ? scanner.next() : "";
-      File file = new File(plugin.getDataFolder().getPath() + "/locales/locale_data.yml");
+    try {
+      File file = new File(plugin.getDataFolder(), "locales/locale_data.yml");
       if(!file.exists()) {
         new File(plugin.getDataFolder().getPath() + "/locales").mkdir();
         if(!file.createNewFile()) {
@@ -59,7 +58,6 @@ public class LocaleService {
           return;
         }
       }
-      Files.write(file.toPath(), data.getBytes());
       localeData = ConfigUtils.getConfig(plugin, "/locales/locale_data");
       plugin.getDebugger().debug(Level.WARNING, "Fetched latest localization file from repository.");
       loadPluginLocales();
@@ -88,33 +86,12 @@ public class LocaleService {
   }
 
   private InputStream requestLocaleFetch(Locale locale) {
-    try {
-      URL url = new URL("https://api.plugily.xyz/locale/v3/fetch.php");
-      HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-      conn.setRequestMethod("POST");
-      conn.setRequestProperty("User-Agent", "PlugilyProjectsLocale/1.0");
-      conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-      conn.setRequestProperty("Accept-Charset", "UTF-8");
-      conn.setDoOutput(true);
-
-      OutputStream os = conn.getOutputStream();
-      if(locale == null) {
-        os.write(("pass=localeservice&type=" + plugin.getName()).getBytes(StandardCharsets.UTF_8));
-      } else {
-        os.write(("pass=localeservice&type=" + plugin.getName() + "&locale=" + locale.getPrefix()).getBytes(StandardCharsets.UTF_8));
+    return new InputStream() {
+      @Override
+      public int read() {
+        return -1;
       }
-      os.flush();
-      os.close();
-      return conn.getInputStream();
-    } catch(IOException e) {
-      plugin.getDebugger().debug(Level.SEVERE, "Could not fetch locale from plugily.xyz api! Cause: {0} ({1})", new Object[]{e.getCause(), e.getMessage()});
-      return new InputStream() {
-        @Override
-        public int read() {
-          return -1;
-        }
-      };
-    }
+    };
   }
 
   /**
