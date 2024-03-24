@@ -61,16 +61,18 @@ public class PluginRestartingState implements ArenaStateHandler {
       arena.getMapRestorerManager().fullyRestoreArena();
       if(plugin.getConfigPreferences().getOption("BUNGEEMODE")) {
         if(ConfigUtils.getConfig(plugin, "bungee").getBoolean("Shutdown-When-Game-Ends")) {
+          Bukkit.getScheduler().runTaskAsynchronously(plugin, ()-> {
+            for(Player player : Bukkit.getOnlinePlayers()) {
+              User user = plugin.getUserManager().getUser(player);
+              plugin.getUserManager().saveAllStatistic(user);
+            }
+            plugin.getServer().shutdown();
+          });
+        } else {
+          plugin.getArenaRegistry().shuffleBungeeArena();
           for(Player player : Bukkit.getOnlinePlayers()) {
-            User user = plugin.getUserManager().getUser(player);
-            plugin.getUserManager().saveAllStatistic(user);
-            plugin.getUserManager().removeUser(user);
+            plugin.getArenaManager().joinAttempt(player, plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena()));
           }
-          plugin.getServer().shutdown();
-        }
-        plugin.getArenaRegistry().shuffleBungeeArena();
-        for(Player player : Bukkit.getOnlinePlayers()) {
-          plugin.getArenaManager().joinAttempt(player, plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena()));
         }
       }
       arenaTimer = plugin.getConfig().getInt("Time-Manager.Waiting", 20);

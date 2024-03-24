@@ -122,14 +122,10 @@ public class MysqlManager implements UserDatabase {
   @Override
   public void saveAllStatistic(User user) {
     if (!user.isDataInitialized()) {
-      plugin.getLogger().warning("Trying save a not loaded player!");
+      plugin.getLogger().warning("Trying save a not loaded player " + user.getUniqueId());
       return;
     }
-    try {
-      Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> database.executeUpdate(getUpdateQuery(user)));
-    } catch(IllegalPluginAccessException ignored) {
-      database.executeUpdate(getUpdateQuery(user));
-    }
+    database.executeUpdate(getUpdateQuery(user));
   }
 
   @Override

@@ -23,7 +23,7 @@ plugins {
 }
 
 dependencies {
-    implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("com.zaxxer:HikariCP:5.1.0")
 }
 
 tasks{
@@ -37,3 +37,6 @@ tasks{
 }
 
 description = "MiniGamesBox-Database"
+repositories {
+    mavenCentral()
+}
