@@ -148,6 +148,7 @@ public class MysqlManager implements UserDatabase {
         } else {
           createUserStats(user, uuid, statement, playerName);
         }
+        user.setDataInitialized(true);
       } catch(SQLException exception) {
         throwException(exception);
       }
@@ -169,7 +170,6 @@ public class MysqlManager implements UserDatabase {
       }
       setUserStat(user, statisticType, resultSet.getInt(statisticType.getName()));
     }
-    user.setDataInitialized(true);
     plugin.getDebugger().debug("Loaded User Stats for {0}", user.getPlayer().getName());
   }
 
