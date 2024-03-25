@@ -46,6 +46,15 @@ public class User {
   private Kit kit = plugin.getKitRegistry().getDefaultKit();
   private final Map<StatisticType, Integer> stats = new HashMap<>();
   private final Map<String, Double> cooldowns = new HashMap<>();
+  private boolean dataInitialized = false;
+
+  public boolean isDataInitialized() {
+    return dataInitialized;
+  }
+
+  public void setDataInitialized(boolean dataInitialized) {
+    this.dataInitialized = dataInitialized;
+  }
 
   @Deprecated
   public User(Player player) {

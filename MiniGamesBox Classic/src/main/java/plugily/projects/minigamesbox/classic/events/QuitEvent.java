@@ -59,10 +59,7 @@ public class QuitEvent implements Listener {
             plugin.getArenaManager().leaveAttempt(player, arena);
         }
         User user = plugin.getUserManager().getUser(player);
-        if (MysqlManager.isload(player.getUniqueId())) {//只有已经加载了数据的玩家才可以在退出时保存数据
-            plugin.getUserManager().saveAllStatistic(user);
-            MysqlManager.unload(player.getUniqueId());
-        }
+        plugin.getUserManager().saveAllStatistic(user);
         plugin.getUserManager().removeUser(user);
 
         plugin.getArgumentsRegistry().getSpyChat().disableSpyChat(player);

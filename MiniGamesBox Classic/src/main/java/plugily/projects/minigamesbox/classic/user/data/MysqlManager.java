@@ -131,16 +131,15 @@ public class MysqlManager implements UserDatabase {
 
   @Override
   public void saveAllStatistic(User user) {
-    if (!isload(user.getUniqueId())) {
-      plugin.getLogger().warning("尝试在保存一个未加载数据的玩家");
-    }else{
+    if (!user.isDataInitialized()) {
+        plugin.getLogger().warning("尝试在保存一个未加载数据的玩家");
+    } else {
       try {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> database.executeUpdate(getUpdateQuery(user)));
       } catch(IllegalPluginAccessException ignored) {
         database.executeUpdate(getUpdateQuery(user));
       }
     }
-
   }
 
   @Override
@@ -157,6 +156,7 @@ public class MysqlManager implements UserDatabase {
         } else {
           createUserStats(user, uuid, statement, playerName);
         }
+        user.setDataInitialized(true);
       } catch(SQLException exception) {
         throwException(exception);
       }
