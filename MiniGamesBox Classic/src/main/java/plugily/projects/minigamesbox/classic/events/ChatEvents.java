@@ -74,16 +74,16 @@ public class ChatEvents implements Listener {
 
   private String formatChatPlaceholders(User user, PluginArena arena) {
     String formatted = new MessageBuilder("IN_GAME_GAME_CHAT_FORMAT").asKey().getRaw();
-    if (user.isSpectator()) {
-      if (formatted.contains("%kit%")) {
+    if(user.isSpectator()) {
+      if(formatted.contains("%kit%")) {
         formatted =
-            StringUtils.replace(
-                formatted, "%kit%", new MessageBuilder("IN_GAME_DEATH_TAG").asKey().build());
+                StringUtils.replace(
+                        formatted, "%kit%", new MessageBuilder("IN_GAME_DEATH_TAG").asKey().build());
       } else {
         formatted = new MessageBuilder("IN_GAME_DEATH_TAG").asKey().build() + formatted;
       }
     } else {
-      if (user.getKit() == null) {
+      if(!plugin.getConfigPreferences().getOption("KITS")) {
         formatted = StringUtils.replace(formatted, "%kit%", "-");
       } else {
         formatted = StringUtils.replace(formatted, "%kit%", user.getKit().getName());
@@ -91,6 +91,7 @@ public class ChatEvents implements Listener {
     }
     formatted = StringUtils.replace(formatted, "%player%", "%1$s");
     formatted = StringUtils.replace(formatted, "%message%", "%2$s");
+    formatted = new MessageBuilder(formatted).arena(arena).player(user.getPlayer()).build();
     // notice - unresolved % could throw UnknownFormatException
     return formatted;
   }
