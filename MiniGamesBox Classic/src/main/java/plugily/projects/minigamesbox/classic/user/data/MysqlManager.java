@@ -44,26 +44,16 @@ import java.util.logging.Level;
 public class MysqlManager implements UserDatabase {
 
   private final PluginMain plugin;
-  private static List<UUID> isloaded;
   private final MysqlDatabase database;
   private final String createTableStatement;
 
   public MysqlManager(PluginMain plugin) {
     this.plugin = plugin;
-    isloaded = new ArrayList<>();
     this.createTableStatement = "CREATE TABLE IF NOT EXISTS `" + getTableName() + "` (`UUID` char(36) NOT NULL PRIMARY KEY, `name` varchar(32) NOT NULL);";
     FileConfiguration config = ConfigUtils.getConfig(plugin, "mysql");
     database = new MysqlDatabase(config.getString("user"), config.getString("password"), config.getString("address"), config.getLong("maxLifeTime", 1800000));
     plugin.getDebugger().debug("MySQL Database enabled");
     initializeTable(plugin);
-  }
-
-  public static boolean isload(UUID uniqueId) {
-    return isloaded.contains(uniqueId);
-  }
-
-  public static void unload(UUID uniqueId) {
-    isloaded.remove(uniqueId);
   }
 
   private void initializeTable(PluginMain plugin) {
@@ -156,7 +146,6 @@ public class MysqlManager implements UserDatabase {
         } else {
           createUserStats(user, uuid, statement, playerName);
         }
-        user.setDataInitialized(true);
       } catch(SQLException exception) {
         throwException(exception);
       }
@@ -180,7 +169,7 @@ public class MysqlManager implements UserDatabase {
     }
     if (user!=null){
       plugin.getDebugger().debug("Loaded User Stats for {0}", user.getPlayer().getName());
-      isloaded.add(user.getPlayer().getUniqueId());
+      user.setDataInitialized(true);
     }
   }
 
