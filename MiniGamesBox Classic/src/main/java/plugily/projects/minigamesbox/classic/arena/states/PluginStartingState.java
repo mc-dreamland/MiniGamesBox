@@ -21,6 +21,7 @@ package plugily.projects.minigamesbox.classic.arena.states;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.CraftingInventory;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.api.event.game.PlugilyGameStartEvent;
 import plugily.projects.minigamesbox.classic.arena.ArenaState;
@@ -101,6 +102,9 @@ public class PluginStartingState implements ArenaStateHandler {
         player.setExp(0);
         player.setLevel(0);
         player.getInventory().clear();
+        if (player.getOpenInventory().getTopInventory() instanceof CraftingInventory){
+          player.getOpenInventory().getTopInventory().clear();
+        }
         player.setGameMode(GameMode.SURVIVAL);
         User user = plugin.getUserManager().getUser(player);
         user.getKit().giveKitItems(player);

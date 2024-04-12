@@ -35,6 +35,7 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
@@ -144,12 +145,18 @@ public class Events implements Listener {
     if(arena == null) {
       return;
     }
-    if(arena.getArenaState() != ArenaState.IN_GAME) {
-      if(event.getClickedInventory() == event.getWhoClicked().getInventory()) {
-        if(event.getView().getType() == InventoryType.WORKBENCH || event.getView().getType() == InventoryType.ANVIL || event.getView().getType() == InventoryType.ENCHANTING || event.getView().getType() == InventoryType.CRAFTING || event.getView().getType() == InventoryType.PLAYER) {
-          event.setResult(Event.Result.DENY);
-          event.setCancelled(true);
-        }
+    if(arena.getArenaState() == ArenaState.IN_GAME) {
+      if (InventoryAction.MOVE_TO_OTHER_INVENTORY == event.getAction()) {
+        event.setResult(Event.Result.DENY);
+        event.setCancelled(true);
+      }
+      if (event.getClickedInventory() != null
+              && (event.getClickedInventory().getType() == InventoryType.WORKBENCH
+              || event.getClickedInventory().getType() == InventoryType.BARREL
+              || event.getClickedInventory().getType() == InventoryType.CHEST)
+      ){
+        event.setResult(Event.Result.DENY);
+        event.setCancelled(true);
       }
     }
   }

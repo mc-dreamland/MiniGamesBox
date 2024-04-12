@@ -23,6 +23,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.IllegalPluginAccessException;
 import org.jetbrains.annotations.NotNull;
+import plugily.projects.minigamesbox.classic.user.UserManager;
 import plugily.projects.minigamesbox.database.MysqlDatabase;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.api.StatisticType;
@@ -122,13 +123,9 @@ public class MysqlManager implements UserDatabase {
   @Override
   public void saveAllStatistic(User user) {
     if (!user.isDataInitialized()) {
-        plugin.getLogger().warning("尝试在保存一个未加载数据的玩家");
+        plugin.getLogger().warning("尝试在保存一个未加载数据的玩家 " + user.getUniqueId());
     } else {
-      try {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> database.executeUpdate(getUpdateQuery(user)));
-      } catch(IllegalPluginAccessException ignored) {
-        database.executeUpdate(getUpdateQuery(user));
-      }
+      database.executeUpdate(getUpdateQuery(user));
     }
   }
 
@@ -266,7 +263,8 @@ public class MysqlManager implements UserDatabase {
   @Override
   public void disable() {
     for(Player player : plugin.getServer().getOnlinePlayers()) {
-      database.executeUpdate(getUpdateQuery(plugin.getUserManager().getUser(player)));
+      User user = plugin.getUserManager().getUser(player);
+      saveAllStatistic(user);
     }
     database.shutdownConnPool();
   }
