@@ -19,11 +19,11 @@
 package plugily.projects.minigamesbox.classic.utils.items;
 
 
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
@@ -128,6 +128,11 @@ public class HandlerItem {
             return;
         }
         inventoryClickHandlers.forEach(consumer -> consumer.accept(event));
+    }
+    void handleInventoryMoveEvent(InventoryMoveItemEvent event){
+        if (movementCancel) {
+            event.setCancelled(true);
+        }
     }
 
 

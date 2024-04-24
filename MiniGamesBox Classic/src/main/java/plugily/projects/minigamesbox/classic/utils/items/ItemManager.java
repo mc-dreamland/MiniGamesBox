@@ -22,6 +22,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.server.PluginDisableEvent;
@@ -128,6 +129,19 @@ public class ItemManager {
       boolean wasCancelled = event.isCancelled();
       event.setCancelled(true);
       handlerItem.handleInventoryClickEvent(event);
+      if(!wasCancelled && !event.isCancelled()) {
+        event.setCancelled(false);
+      }
+    }
+    @EventHandler
+    public void onInventoryClickEvent2(InventoryMoveItemEvent event) {
+      HandlerItem handlerItem = getInteractItem(event.getItem());
+      if(handlerItem == null) {
+        return;
+      }
+      boolean wasCancelled = event.isCancelled();
+      event.setCancelled(true);
+      handlerItem.handleInventoryMoveEvent(event);
       if(!wasCancelled && !event.isCancelled()) {
         event.setCancelled(false);
       }
