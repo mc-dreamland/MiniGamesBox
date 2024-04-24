@@ -22,6 +22,8 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -77,6 +79,12 @@ public class PluginArenaUtils {
     }
     VersionUtils.teleport(player, location);
     player.getInventory().clear();
+
+    if (player.getOpenInventory().getTopInventory() instanceof CraftingInventory){
+      player.getOpenInventory().getTopInventory().clear();
+    }
+    player.setItemOnCursor(null);
+
     player
         .getActivePotionEffects()
         .forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
@@ -133,6 +141,9 @@ public class PluginArenaUtils {
     player.setFlying(false);
     player.setAllowFlight(false);
     player.getInventory().clear();
+    if (player.getOpenInventory().getTopInventory() instanceof CraftingInventory){
+      player.getOpenInventory().getTopInventory().clear();
+    }
     player.getInventory().setArmorContents(null);
     VersionUtils.setMaxHealth(player, 20);
     player.setHealth(VersionUtils.getMaxHealth(player));

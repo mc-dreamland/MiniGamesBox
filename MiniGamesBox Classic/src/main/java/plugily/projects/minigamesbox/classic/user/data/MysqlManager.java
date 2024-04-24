@@ -23,6 +23,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.IllegalPluginAccessException;
 import org.jetbrains.annotations.NotNull;
+import plugily.projects.minigamesbox.classic.user.UserManager;
 import plugily.projects.minigamesbox.database.MysqlDatabase;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.api.StatisticType;
@@ -44,26 +45,16 @@ import java.util.logging.Level;
 public class MysqlManager implements UserDatabase {
 
   private final PluginMain plugin;
-  private static List<UUID> isloaded;
   private final MysqlDatabase database;
   private final String createTableStatement;
 
   public MysqlManager(PluginMain plugin) {
     this.plugin = plugin;
-    isloaded = new ArrayList<>();
     this.createTableStatement = "CREATE TABLE IF NOT EXISTS `" + getTableName() + "` (`UUID` char(36) NOT NULL PRIMARY KEY, `name` varchar(32) NOT NULL);";
     FileConfiguration config = ConfigUtils.getConfig(plugin, "mysql");
     database = new MysqlDatabase(config.getString("user"), config.getString("password"), config.getString("address"), config.getLong("maxLifeTime", 1800000));
     plugin.getDebugger().debug("MySQL Database enabled");
     initializeTable(plugin);
-  }
-
-  public static boolean isload(UUID uniqueId) {
-    return isloaded.contains(uniqueId);
-  }
-
-  public static void unload(UUID uniqueId) {
-    isloaded.remove(uniqueId);
   }
 
   private void initializeTable(PluginMain plugin) {
@@ -131,16 +122,11 @@ public class MysqlManager implements UserDatabase {
 
   @Override
   public void saveAllStatistic(User user) {
-    if (!isload(user.getUniqueId())) {
-      plugin.getLogger().warning("尝试在保存一个未加载数据的玩家");
-    }else{
-      try {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> database.executeUpdate(getUpdateQuery(user)));
-      } catch(IllegalPluginAccessException ignored) {
-        database.executeUpdate(getUpdateQuery(user));
-      }
+    if (!user.isDataInitialized()) {
+        plugin.getLogger().warning("尝试在保存一个未加载数据的玩家 " + user.getUniqueId());
+    } else {
+      database.executeUpdate(getUpdateQuery(user));
     }
-
   }
 
   @Override
@@ -180,7 +166,7 @@ public class MysqlManager implements UserDatabase {
     }
     if (user!=null){
       plugin.getDebugger().debug("Loaded User Stats for {0}", user.getPlayer().getName());
-      isloaded.add(user.getPlayer().getUniqueId());
+      user.setDataInitialized(true);
     }
   }
 
@@ -277,7 +263,8 @@ public class MysqlManager implements UserDatabase {
   @Override
   public void disable() {
     for(Player player : plugin.getServer().getOnlinePlayers()) {
-      database.executeUpdate(getUpdateQuery(plugin.getUserManager().getUser(player)));
+      User user = plugin.getUserManager().getUser(player);
+      saveAllStatistic(user);
     }
     database.shutdownConnPool();
   }
