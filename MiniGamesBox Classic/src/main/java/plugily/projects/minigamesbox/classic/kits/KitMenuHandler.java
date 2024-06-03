@@ -24,7 +24,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.api.event.player.PlugilyPlayerChooseKitEvent;
+import plugily.projects.minigamesbox.classic.arena.ArenaState;
 import plugily.projects.minigamesbox.classic.arena.PluginArena;
+import plugily.projects.minigamesbox.classic.arena.PluginArenaManager;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.kits.basekits.Kit;
 import plugily.projects.minigamesbox.classic.utils.helper.ItemBuilder;
@@ -71,6 +73,9 @@ public class KitMenuHandler implements Listener {
         }
         PluginArena arena = plugin.getArenaRegistry().getArena(player);
         if(arena == null) {
+          return;
+        }
+        if (ArenaState.IN_GAME == arena.getArenaState()){
           return;
         }
         PlugilyPlayerChooseKitEvent chooseKitEvent = new PlugilyPlayerChooseKitEvent(player, kit, arena);

@@ -21,19 +21,19 @@ package plugily.projects.minigamesbox.classic.utils.items;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
 import plugily.projects.minigamesbox.classic.utils.version.events.api.PlugilyPlayerInteractEvent;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -133,17 +133,38 @@ public class ItemManager {
         event.setCancelled(false);
       }
     }
+
     @EventHandler
-    public void onInventoryClickEvent2(InventoryMoveItemEvent event) {
-      HandlerItem handlerItem = getInteractItem(event.getItem());
+    public void onInventoryClickByNumKeyEvent(InventoryClickEvent event) {
+      if (ClickType.NUMBER_KEY != event.getClick()) return;
+      int hotbarButton = event.getHotbarButton();
+      ItemStack item = event.getView().getBottomInventory().getItem(hotbarButton);
+      HandlerItem handlerItem = getInteractItem(item);
       if(handlerItem == null) {
         return;
       }
       boolean wasCancelled = event.isCancelled();
       event.setCancelled(true);
-      handlerItem.handleInventoryMoveEvent(event);
+      handlerItem.handleInventoryClickEvent(event);
       if(!wasCancelled && !event.isCancelled()) {
         event.setCancelled(false);
+      }
+    }
+
+    @EventHandler
+    public void onInventoryDrag(InventoryDragEvent event) {
+      for (ItemStack itemStack : event.getNewItems().values()) {
+        HandlerItem handlerItem = getInteractItem(itemStack);
+        if(handlerItem == null) {
+          continue;
+        }
+        boolean wasCancelled = event.isCancelled();
+        event.setCancelled(true);
+        handlerItem.handleInventoryDragEvent(event);
+        if(!wasCancelled && !event.isCancelled()) {
+          event.setCancelled(false);
+        }
+        break;
       }
     }
 
@@ -157,7 +178,7 @@ public class ItemManager {
 
     private HandlerItem getInteractItem(ItemStack itemStack) {
       for(HandlerItem item : items) {
-        if(item.getItemStack().equals(itemStack)) {
+        if(item.getItemStack().isSimilar(itemStack)) {
           return item;
         }
       }

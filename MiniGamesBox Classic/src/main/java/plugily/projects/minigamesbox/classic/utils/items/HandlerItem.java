@@ -23,6 +23,7 @@ import org.bukkit.GameMode;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
@@ -119,17 +120,14 @@ public class HandlerItem {
 
     void handleInventoryClickEvent(InventoryClickEvent event) {
         if (movementCancel) {
-            if (event.getWhoClicked().getGameMode() != GameMode.SURVIVAL) {
-                event.setCancelled(false);
-                return;
-            }
             event.setResult(Event.Result.DENY);
             event.setCancelled(true);
             return;
         }
         inventoryClickHandlers.forEach(consumer -> consumer.accept(event));
     }
-    void handleInventoryMoveEvent(InventoryMoveItemEvent event){
+
+    void handleInventoryDragEvent(InventoryDragEvent event){
         if (movementCancel) {
             event.setCancelled(true);
         }

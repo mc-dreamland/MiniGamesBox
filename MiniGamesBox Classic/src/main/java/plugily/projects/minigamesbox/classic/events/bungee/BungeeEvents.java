@@ -53,26 +53,4 @@ public class BungeeEvents implements Listener {
     }
   }
 
-  @EventHandler
-  public void onGameStateChange(PlugilyGameStateChangeEvent e) {
-    switch(e.getArenaState()) {
-      case WAITING_FOR_PLAYERS:
-        plugin.getServer().setWhitelist(false);
-        break;
-      case IN_GAME:
-        plugin.getServer().setWhitelist(e.getArena().getMaximumPlayers() <= e.getArena().getPlayers().size());
-        break;
-      case ENDING:
-        plugin.getServer().setWhitelist(false);
-        break;
-      case STARTING:
-      case RESTARTING:
-      default:
-        break;
-    }
-    if(e.getArenaState() == ArenaState.ENDING) {
-      plugin.getServer().setWhitelist(false);
-    }
-  }
-
 }

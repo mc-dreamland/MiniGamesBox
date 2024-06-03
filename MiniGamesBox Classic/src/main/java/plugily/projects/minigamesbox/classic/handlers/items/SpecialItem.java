@@ -25,6 +25,7 @@ import org.bukkit.inventory.PlayerInventory;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.handlers.reward.Reward;
 import plugily.projects.minigamesbox.classic.utils.items.HandlerItem;
+import plugily.projects.minigamesbox.classic.utils.items.ItemManager;
 import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
 
 import java.util.Collections;
@@ -157,7 +158,7 @@ public class SpecialItem {
 
   public void setItem(Player player) {
     if(!move) {
-      new HandlerItem(itemStack).setMovementCancel(true);
+      new HandlerItem(itemStack).setMovementCancel(true).build();
     }
 
     PlayerInventory playerInventory = player.getInventory();
