@@ -25,12 +25,17 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import plugily.projects.minigamesbox.api.arena.IArenaState;
+import plugily.projects.minigamesbox.api.arena.IPluginArena;
+import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.PluginMain;
+import plugily.projects.minigamesbox.classic.arena.states.ArenaState;
 import plugily.projects.minigamesbox.classic.handlers.items.SpecialItem;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
-import plugily.projects.minigamesbox.classic.user.User;
 import plugily.projects.minigamesbox.classic.utils.serialization.InventorySerializer;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author Tigerpanzer_02
@@ -47,13 +52,13 @@ public class PluginArenaUtils {
     PluginArenaUtils.plugin = plugin;
   }
 
-  public static void hidePlayer(Player p, PluginArena arena) {
+  public static void hidePlayer(Player p, IPluginArena arena) {
     for(Player player : arena.getPlayers()) {
       VersionUtils.hidePlayer(plugin, player, p);
     }
   }
 
-  public static void showPlayer(Player p, PluginArena arena) {
+  public static void showPlayer(Player p, IPluginArena arena) {
     for(Player player : arena.getPlayers()) {
       VersionUtils.showPlayer(plugin, player, p);
     }
@@ -68,62 +73,63 @@ public class PluginArenaUtils {
       VersionUtils.hidePlayer(plugin, players, player);
     }
   }
+  
+  public static CompletableFuture<Void> preparePlayerForGame(
+      IPluginArena arena, Player player, Location location, boolean spectator) {
+    return VersionUtils.teleport(player, location).thenAccept(bo -> {
+      IUser user = plugin.getUserManager().getUser(player);
+      if (plugin.getConfigPreferences().getOption("INVENTORY_MANAGER")) {
+        InventorySerializer.saveInventoryToFile(plugin, player);
+      }
+      player.getInventory().clear();
+      player
+              .getActivePotionEffects()
+              .forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
+      VersionUtils.setMaxHealth(player, VersionUtils.getMaxHealth(player));
+      player.setHealth(VersionUtils.getMaxHealth(player));
+      player.setFoodLevel(20);
+      player.setGameMode(GameMode.SURVIVAL);
+      player
+              .getInventory()
+              .setArmorContents(
+                      new ItemStack[]{
+                              new ItemStack(Material.AIR),
+                              new ItemStack(Material.AIR),
+                              new ItemStack(Material.AIR),
+                              new ItemStack(Material.AIR)
+                      });
+      player.setExp(1);
+      player.setLevel(0);
+      player.setWalkSpeed(0.2f);
+      player.setFlySpeed(0.1f);
 
-  public static void preparePlayerForGame(
-      PluginArena arena, Player player, Location location, boolean spectator) {
-    User user = plugin.getUserManager().getUser(player);
-    if(plugin.getConfigPreferences().getOption("INVENTORY_MANAGER")) {
-      InventorySerializer.saveInventoryToFile(plugin, player);
-    }
-    VersionUtils.teleport(player, location);
-    player.getInventory().clear();
-    player
-        .getActivePotionEffects()
-        .forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
-    VersionUtils.setMaxHealth(player, VersionUtils.getMaxHealth(player));
-    player.setHealth(VersionUtils.getMaxHealth(player));
-    player.setFoodLevel(20);
-    player.setGameMode(GameMode.SURVIVAL);
-    player
-        .getInventory()
-        .setArmorContents(
-            new ItemStack[]{
-                new ItemStack(Material.AIR),
-                new ItemStack(Material.AIR),
-                new ItemStack(Material.AIR),
-                new ItemStack(Material.AIR)
-            });
-    player.setExp(1);
-    player.setLevel(0);
-    player.setWalkSpeed(0.2f);
-    player.setFlySpeed(0.1f);
-
-    if(spectator) {
-      player.setAllowFlight(true);
-      player.setFlying(true);
-      user.setSpectator(true);
-      player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 0));
-      plugin
-          .getSpecialItemManager()
-          .addSpecialItemsOfStage(player, SpecialItem.DisplayStage.SPECTATOR);
-    } else {
-      player.setAllowFlight(false);
-      player.setFlying(false);
-      user.setSpectator(false);
-    }
-    player.updateInventory();
-    arena.getBossbarManager().doBarAction(PluginArena.BarAction.ADD, player);
-    arena.getScoreboardManager().createScoreboard(user);
+      if (spectator) {
+        player.setAllowFlight(true);
+        player.setFlying(true);
+        user.setSpectator(true);
+        player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 0));
+        plugin
+                .getSpecialItemManager()
+                .addSpecialItemsOfStage(player, SpecialItem.DisplayStage.SPECTATOR);
+      } else {
+        player.setAllowFlight(false);
+        player.setFlying(false);
+        user.setSpectator(false);
+      }
+      player.updateInventory();
+      arena.getBossbarManager().doBarAction(IPluginArena.IBarAction.ADD, player);
+      arena.getScoreboardManager().createScoreboard(user);
+    });
   }
 
-  public static void resetPlayerAfterGame(PluginArena arena, Player player) {
+  public static void resetPlayerAfterGame(IPluginArena arena, Player player) {
     for(Player players : plugin.getServer().getOnlinePlayers()) {
       VersionUtils.showPlayer(plugin, player, players);
       if(!plugin.getArenaRegistry().isInArena(players)) {
         VersionUtils.showPlayer(plugin, players, player);
       }
     }
-    User user = plugin.getUserManager().getUser(player);
+    IUser user = plugin.getUserManager().getUser(player);
     user.setSpectator(false);
     user.setPermanentSpectator(false);
 
@@ -147,7 +153,7 @@ public class PluginArenaUtils {
     VersionUtils.setGlowing(player, false);
 
     arena.getScoreboardManager().removeScoreboard(user);
-    arena.getBossbarManager().doBarAction(PluginArena.BarAction.REMOVE, player);
+    arena.getBossbarManager().doBarAction(IPluginArena.IBarAction.REMOVE, player);
     arena.teleportToEndLocation(player);
     arena.getPlayers().remove(player);
 
@@ -164,18 +170,18 @@ public class PluginArenaUtils {
       return;
     }
 
-    PluginArena arena = plugin.getArenaRegistry().getArena(player);
+    IPluginArena arena = plugin.getArenaRegistry().getArena(player);
     if(arena == null) {
       new MessageBuilder("COMMANDS_NOT_PLAYING").asKey().player(player).sendPlayer();
       return;
     }
-    if(!arena.getArenaState().isLobbyStage(arena)) {
+    if(!ArenaState.isLobbyStage(arena)) {
       return;
     }
 
     plugin.getDebugger().debug("Arena {0} got force started by {1} with timer {2}", arena.getId(), player.getName(), timer);
-    if(arena.getArenaState() == ArenaState.WAITING_FOR_PLAYERS) {
-      arena.setArenaState(ArenaState.STARTING, true);
+    if(arena.getArenaState() == IArenaState.WAITING_FOR_PLAYERS) {
+      arena.setArenaState(IArenaState.STARTING, true);
     }
     if(timer <= 0) {
       arena.setForceStart(true);
@@ -190,7 +196,7 @@ public class PluginArenaUtils {
   }
 
   public static boolean areInSameArena(Player one, Player two) {
-    PluginArena arena = plugin.getArenaRegistry().getArena(one);
+    IPluginArena arena = plugin.getArenaRegistry().getArena(one);
 
     return arena != null && arena.equals(plugin.getArenaRegistry().getArena(two));
   }
