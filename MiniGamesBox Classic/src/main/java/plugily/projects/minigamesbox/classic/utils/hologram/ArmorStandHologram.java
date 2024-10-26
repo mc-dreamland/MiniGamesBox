@@ -227,6 +227,7 @@ public class ArmorStandHologram {
     stand.setVisible(false);
     stand.setGravity(false);
     stand.setCustomNameVisible(true);
+    stand.setCollidable(false);
     return stand;
   }
 
