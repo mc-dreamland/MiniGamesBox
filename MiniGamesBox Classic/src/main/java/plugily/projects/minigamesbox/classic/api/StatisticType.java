@@ -36,9 +36,9 @@ public class StatisticType {
     statistics.put("WINS", new StatisticType("wins", true, "int(11) NOT NULL DEFAULT '0'", true));
     statistics.put("LOSES", new StatisticType("loses", true, "int(11) NOT NULL DEFAULT '0'", true));
     statistics.put("GAMES_PLAYED", new StatisticType("games_played", true, "int(11) NOT NULL DEFAULT '0'", true));
-    statistics.put("LEVEL", new StatisticType("level", true, "int(11) NOT NULL DEFAULT '0'", true));
-    statistics.put("EXP", new StatisticType("exp", true, "int(11) NOT NULL DEFAULT '0'", true));
-    statistics.put("NEXT_LEVEL_EXP", new StatisticType("next_level_exp", true, "int(11) NOT NULL DEFAULT '0'", true));
+    statistics.put("LEVEL", new StatisticType("level", true, "bigint(11) NOT NULL DEFAULT '0'", true));
+    statistics.put("EXP", new StatisticType("exp", true, "bigint(11) NOT NULL DEFAULT '0'", true));
+    statistics.put("NEXT_LEVEL_EXP", new StatisticType("next_level_exp", true, "bigint(11) NOT NULL DEFAULT '0'", true));
   }
 
   private final String name;
