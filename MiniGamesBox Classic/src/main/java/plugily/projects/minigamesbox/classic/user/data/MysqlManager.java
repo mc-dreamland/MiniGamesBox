@@ -123,7 +123,7 @@ public class MysqlManager implements UserDatabase {
   @Override
   public void saveAllStatistic(User user) {
     if (!user.isDataInitialized()) {
-        plugin.getLogger().warning("尝试在保存一个未加载数据的玩家 " + user.getUniqueId());
+        plugin.getDebugger().debug("Saving when player not loaded " + user.getUniqueId());
     } else {
       database.executeUpdate(getUpdateQuery(user));
     }
