@@ -162,7 +162,7 @@ public class MysqlManager implements UserDatabase {
       if(!statisticType.isPersistent()) {
         continue;
       }
-      setUserStat(user, statisticType, resultSet.getInt(statisticType.getName()));
+      setUserStat(user, statisticType, resultSet.getLong(statisticType.getName()));
     }
     if (user!=null){
       plugin.getDebugger().debug("Loaded User Stats for {0}", user.getPlayer().getName());
@@ -192,7 +192,7 @@ public class MysqlManager implements UserDatabase {
    * @param statisticType
    * @param value
    */
-  private void setUserStat(User user, @NotNull StatisticType statisticType, int value) {
+  private void setUserStat(User user, @NotNull StatisticType statisticType, long value) {
     if(statisticType.isPersistent()) {
       user.setStatistic(statisticType, value);
     }
