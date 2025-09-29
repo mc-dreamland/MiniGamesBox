@@ -120,9 +120,9 @@ public class UserManager implements IUserManager {
     if(user.getStatistic(nextLevelExp) < user.getStatistic(plugin.getStatsStorage().getStatisticType("EXP"))) {
       user.adjustStatistic(plugin.getStatsStorage().getStatisticType("LEVEL"), 1);
 
-      int level = user.getStatistic(plugin.getStatsStorage().getStatisticType("LEVEL"));
+      long level = user.getStatistic(plugin.getStatsStorage().getStatisticType("LEVEL"));
 
-      user.setStatistic(nextLevelExp, (int) Math.ceil(Math.pow(50.0 * level, 1.5)));
+      user.setStatistic(nextLevelExp, (long) Math.ceil(Math.pow(50.0 * level, 1.5)));
 
       //Arena can be null when player has left the arena before this message is retrieved.
       if(arena != null)

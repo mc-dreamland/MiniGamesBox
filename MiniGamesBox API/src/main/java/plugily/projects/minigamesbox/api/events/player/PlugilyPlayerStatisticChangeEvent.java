@@ -35,9 +35,9 @@ public class PlugilyPlayerStatisticChangeEvent extends PlugilyEvent {
   private static final HandlerList HANDLERS = new HandlerList();
   private final Player player;
   private final IStatisticType statisticType;
-  private final int number;
+  private final long number;
 
-  public PlugilyPlayerStatisticChangeEvent(IPluginArena eventArena, Player player, IStatisticType statisticType, int number) {
+  public PlugilyPlayerStatisticChangeEvent(IPluginArena eventArena, Player player, IStatisticType statisticType, long number) {
     super(eventArena);
     this.player = player;
     this.statisticType = statisticType;
@@ -61,7 +61,7 @@ public class PlugilyPlayerStatisticChangeEvent extends PlugilyEvent {
     return statisticType;
   }
 
-  public int getNumber() {
+  public long getNumber() {
     return number;
   }
 }

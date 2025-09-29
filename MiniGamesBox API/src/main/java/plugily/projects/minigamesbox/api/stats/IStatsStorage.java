@@ -10,9 +10,9 @@ import java.util.UUID;
  * @since April 24, 2024
  */
 public interface IStatsStorage {
-  Map<UUID, Integer> getStats(IStatisticType stat);
+  Map<UUID, Long> getStats(IStatisticType stat);
 
-  int getUserStats(Player player, IStatisticType statisticType);
+  long getUserStats(Player player, IStatisticType statisticType);
 
   String getStatisticName(String key);
 

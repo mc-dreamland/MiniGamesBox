@@ -60,12 +60,12 @@ public class StatsStorage implements IStatsStorage {
     plugin.getPlaceholderManager().registerPlaceholder(new Placeholder("user_statistic_" + statisticType.getName(), Placeholder.PlaceholderExecutor.ALL) {
       @Override
       public String getValue(Player player) {
-        return Integer.toString(getUserStats(player, statisticType));
+        return String.valueOf(getUserStats(player, statisticType));
       }
 
       @Override
       public String getValue(Player player, IPluginArena arena) {
-        return Integer.toString(getUserStats(player, statisticType));
+        return String.valueOf(getUserStats(player, statisticType));
       }
     });
   }
@@ -77,7 +77,7 @@ public class StatsStorage implements IStatsStorage {
    * @return Map of UUID keys and Integer values sorted in ascending order of requested statistic type
    */
   @Override
-  public Map<UUID, Integer> getStats(IStatisticType stat) {
+  public Map<UUID, Long> getStats(IStatisticType stat) {
     return plugin.getUserManager().getDatabase().getStats(stat);
   }
 
@@ -90,7 +90,7 @@ public class StatsStorage implements IStatsStorage {
    * @see StatisticType
    */
   @Override
-  public int getUserStats(Player player, IStatisticType statisticType) {
+  public long getUserStats(Player player, IStatisticType statisticType) {
     return plugin.getUserManager().getUser(player).getStatistic(statisticType);
   }
 

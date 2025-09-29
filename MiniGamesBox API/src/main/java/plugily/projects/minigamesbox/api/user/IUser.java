@@ -30,17 +30,17 @@ public interface IUser {
 
   void setPermanentSpectator(boolean permanentSpectator);
 
-  int getStatistic(String statistic);
+  long getStatistic(String statistic);
 
-  int getStatistic(IStatisticType statisticType);
+  long getStatistic(IStatisticType statisticType);
 
-  void setStatistic(IStatisticType statisticType, int value);
+  void setStatistic(IStatisticType statisticType, long value);
 
-  void setStatistic(String statistic, int value);
+  void setStatistic(String statistic, long value);
 
-  void adjustStatistic(IStatisticType statisticType, int value);
+  void adjustStatistic(IStatisticType statisticType, long value);
 
-  void adjustStatistic(String statistic, int value);
+  void adjustStatistic(String statistic, long value);
 
   void resetNonePersistentStatistics();
 

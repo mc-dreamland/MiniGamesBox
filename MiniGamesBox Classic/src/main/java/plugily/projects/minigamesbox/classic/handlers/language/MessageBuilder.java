@@ -32,6 +32,8 @@ import plugily.projects.minigamesbox.classic.utils.misc.MiscUtils;
 import plugily.projects.minigamesbox.classic.utils.version.ServerVersion;
 import plugily.projects.minigamesbox.string.StringFormatUtils;
 
+import java.math.BigInteger;
+
 /**
  * @author Tigerpanzer_02
  * <p>
@@ -49,7 +51,7 @@ public class MessageBuilder {
   private String message;
   private Player player;
   private String value;
-  private int integer;
+  private BigInteger integer;
   private IPluginArena arena;
   private static PluginMain plugin;
 
@@ -130,11 +132,15 @@ public class MessageBuilder {
   }
 
   public MessageBuilder integer(int integer) {
-    this.integer = integer;
-    colorChatIssue();
+    return integer(Long.valueOf(integer));
+  }
+
+  public MessageBuilder integer(long integer) {
+    this.integer = BigInteger.valueOf(integer);
     formatInteger();
     return this;
   }
+
 
   public MessageBuilder arena(IPluginArena arena) {
     if(arena == null) {

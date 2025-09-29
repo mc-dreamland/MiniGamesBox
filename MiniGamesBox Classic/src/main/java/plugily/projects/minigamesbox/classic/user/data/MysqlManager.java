@@ -205,7 +205,7 @@ public class MysqlManager implements UserDatabase {
 
   @NotNull
   @Override
-  public Map<UUID, Integer> getStats(IStatisticType stat) {
+  public Map<UUID, Long> getStats(IStatisticType stat) {
     try(Connection connection = database.getConnection();
         Statement statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery("SELECT UUID, " + stat.getName() + " FROM " + getTableName() + " ORDER BY " + stat.getName())) {
@@ -235,8 +235,8 @@ public class MysqlManager implements UserDatabase {
    * @return
    * @throws SQLException
    */
-  private @NotNull Map<UUID, Integer> getColumnData(IStatisticType statistic, @NotNull ResultSet resultSet) throws SQLException {
-    Map<UUID, Integer> column = new LinkedHashMap<>();
+  private @NotNull Map<UUID, Long> getColumnData(IStatisticType statistic, @NotNull ResultSet resultSet) throws SQLException {
+    Map<UUID, Long> column = new LinkedHashMap<>();
     while(resultSet.next()) {
       String uuid = resultSet.getString("UUID");
 
@@ -246,7 +246,7 @@ public class MysqlManager implements UserDatabase {
 
       try {
         int database = resultSet.getInt(statistic.getName());
-        int value = getUpdatedColumnData(uuid, statistic, database);
+        long value = getUpdatedColumnData(uuid, statistic, database);
         column.put(UUID.fromString(uuid), value);
       } catch(IllegalArgumentException exception) {
         plugin.getDebugger().debug(Level.WARNING, "Cannot load the UUID for {0}", uuid);
@@ -256,7 +256,7 @@ public class MysqlManager implements UserDatabase {
     return column;
   }
 
-  private int getUpdatedColumnData(String uuid, IStatisticType statisticType, int fromDatabase) {
+  private long getUpdatedColumnData(String uuid, IStatisticType statisticType, long fromDatabase) {
     Player player = Bukkit.getPlayer(UUID.fromString(uuid));
     if(player != null && player.isOnline()) {
       return plugin.getStatsStorage().getUserStats(player, statisticType);

@@ -78,7 +78,7 @@ public interface UserDatabase {
    * @return Map of UUID keys and Integer values sorted in ascending order of requested statistic type
    */
   @NotNull
-  Map<UUID, Integer> getStats(IStatisticType stat);
+  Map<UUID, Long> getStats(IStatisticType stat);
 
   /**
    * Disable the database

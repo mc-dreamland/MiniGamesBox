@@ -66,7 +66,7 @@ public class LeaderboardArgument {
   }
 
   private void printLeaderboard(CommandSender sender, IStatisticType statisticType) {
-    java.util.Map<UUID, Integer> stats = registry.getPlugin().getStatsStorage().getStats(statisticType);
+    java.util.Map<UUID, Long> stats = registry.getPlugin().getStatsStorage().getStats(statisticType);
     new MessageBuilder("LEADERBOARD_TYPE_CHAT_TOP_HEADER").asKey().send(sender);
     String statistic = statisticType.getName().toLowerCase().replace('_', ' ').toUpperCase();
     UUID[] array = stats.keySet().toArray(new UUID[0]);
@@ -84,11 +84,11 @@ public class LeaderboardArgument {
     }
   }
 
-  private String formatMessage(String statisticName, String playerName, int position, int value) {
+  private String formatMessage(String statisticName, String playerName, int position, long value) {
     String message = new MessageBuilder("LEADERBOARD_TYPE_CHAT_TOP_FORMAT").asKey().getRaw();
-    message = message.replace("%number%", Integer.toString(position));
+    message = message.replace("%number%", String.valueOf(position));
     message = message.replace("%player%", playerName);
-    message = message.replace("%value%", Integer.toString(value));
+    message = message.replace("%value%", String.valueOf(value));
     message = message.replace("%user_statistic%", statisticName);
     message = new MessageBuilder(message).build();
     return message;

@@ -45,7 +45,7 @@ public class User implements IUser {
   private boolean spectator = false;
   private boolean permanentSpectator = false;
   private IKit kit;
-  private final Map<IStatisticType, Integer> stats = new HashMap<>();
+  private final Map<IStatisticType, Long> stats = new HashMap<>();
   private final Map<String, Double> cooldowns = new HashMap<>();
   private boolean initialized;
 
@@ -110,26 +110,26 @@ public class User implements IUser {
   }
 
   @Override
-  public int getStatistic(String statistic) {
+  public long getStatistic(String statistic) {
     return getStatistic(plugin.getStatsStorage().getStatisticType(statistic.toUpperCase()));
   }
 
   @Override
-  public int getStatistic(IStatisticType statisticType) {
-    return stats.computeIfAbsent(statisticType, t -> 0);
+  public long getStatistic(IStatisticType statisticType) {
+    return stats.computeIfAbsent(statisticType, t -> 0L);
   }
 
   @Override
-  public void setStatistic(IStatisticType statisticType, int value) {
+  public void setStatistic(IStatisticType statisticType, long value) {
     changeUserStatistic(statisticType, value);
   }
 
   @Override
-  public void setStatistic(String statistic, int value) {
+  public void setStatistic(String statistic, long value) {
     changeUserStatistic(plugin.getStatsStorage().getStatisticType(statistic), value);
   }
 
-  private void changeUserStatistic(IStatisticType statisticType, int value) {
+  private void changeUserStatistic(IStatisticType statisticType, long value) {
     stats.put(statisticType, value);
 
     Player player = getPlayer();
@@ -143,12 +143,12 @@ public class User implements IUser {
   }
 
   @Override
-  public void adjustStatistic(IStatisticType statisticType, int value) {
+  public void adjustStatistic(IStatisticType statisticType, long value) {
     changeUserStatistic(statisticType, getStatistic(statisticType) + value);
   }
 
   @Override
-  public void adjustStatistic(String statistic, int value) {
+  public void adjustStatistic(String statistic, long value) {
     IStatisticType statisticType = plugin.getStatsStorage().getStatisticType(statistic);
     changeUserStatistic(statisticType, getStatistic(statisticType) + value);
   }

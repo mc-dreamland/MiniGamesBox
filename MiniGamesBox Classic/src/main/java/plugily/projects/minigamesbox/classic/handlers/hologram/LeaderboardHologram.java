@@ -62,7 +62,7 @@ public class LeaderboardHologram {
   }
 
   public void updateHologram() {
-    java.util.Map<UUID, Integer> values = plugin.getStatsStorage().getStats(statistic);
+    java.util.Map<UUID, Long> values = plugin.getStatsStorage().getStats(statistic);
     List<UUID> reverseKeys = new ArrayList<>(values.keySet());
     Collections.reverse(reverseKeys);
 

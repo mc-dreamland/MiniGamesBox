@@ -77,7 +77,7 @@ public class FileStats implements UserDatabase {
 
   @NotNull
   @Override
-  public Map<UUID, Integer> getStats(IStatisticType stat) {
+  public Map<UUID, Long> getStats(IStatisticType stat) {
     Map<UUID, Integer> stats = new TreeMap<>();
     FileConfiguration config = ConfigUtils.getConfig(plugin, "stats");
     for(String string : config.getKeys(false)) {
@@ -116,7 +116,7 @@ public class FileStats implements UserDatabase {
     plugin.getStatsStorage().getStatistics().forEach((s, statisticType) -> {
       if(statisticType.isPersistent()) {
         String path = uuid + "." + statisticType.getName();
-        int value = user.getStatistic(statisticType);
+        long value = user.getStatistic(statisticType);
         if(value > 0 || config.contains(path)) {
           config.set(path, value);
         }
