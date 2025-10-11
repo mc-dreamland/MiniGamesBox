@@ -18,6 +18,7 @@
 
 package plugily.projects.minigamesbox.classic.kits.ability;
 
+import plugily.projects.minigamesbox.api.kit.ability.IKitAbility;
 import plugily.projects.minigamesbox.classic.PluginMain;
 
 import java.util.Collections;
@@ -26,7 +27,7 @@ import java.util.Map;
 
 public class KitAbilityManager {
 
-  private final Map<String, KitAbility> kitAbilities = new HashMap<>();
+  private final Map<String, IKitAbility> iKitAbilities = new HashMap<>();
   private final PluginMain plugin;
 
 
@@ -37,14 +38,14 @@ public class KitAbilityManager {
       return;
     }
     loadKitAbilities();
-    this.plugin.getDebugger().performance("Kit", "Loaded {0} kit abilities:", kitAbilities.size());
-    kitAbilities.forEach((k, v) -> {
+    this.plugin.getDebugger().performance("Kit", "Loaded {0} kit abilities:", iKitAbilities.size());
+    iKitAbilities.forEach((k, v) -> {
       this.plugin.getDebugger().performance("Kit", " - {0}", k);
     });
   }
 
   private void loadKitAbilities() {
-    kitAbilities.putAll(KitAbility.getKitAbilities());
+    iKitAbilities.putAll(KitAbility.getKitAbilities());
   }
 
   /**
@@ -53,8 +54,8 @@ public class KitAbilityManager {
    * @param name ability to get value from
    * @return ability
    */
-  public KitAbility getKitAbility(String name) {
-    KitAbility KitAbility = kitAbilities.get(name);
+  public IKitAbility getIKitAbility(String name) {
+    IKitAbility KitAbility = iKitAbilities.get(name);
 
     if(KitAbility == null) {
       throw new IllegalStateException("Kitability with name " + name + " does not exist");
@@ -70,11 +71,11 @@ public class KitAbilityManager {
    * @param name   The name of ability
    * @param kitAbility Ability
    */
-  public void registerKitAbility(String name, KitAbility kitAbility) {
-    if(kitAbilities.containsKey(name)) {
+  public void registerKitAbility(String name, IKitAbility kitAbility) {
+    if(iKitAbilities.containsKey(name)) {
       throw new IllegalStateException("Kit Ability " + name + " was already registered");
     }
-    kitAbilities.put(name, kitAbility);
+    iKitAbilities.put(name, kitAbility);
   }
 
   /**
@@ -83,14 +84,14 @@ public class KitAbilityManager {
    * @param name The name of the ability
    */
   public void unregisterOption(String name) {
-    KitAbility option = kitAbilities.get(name);
+    IKitAbility option = iKitAbilities.get(name);
     if(option == null) {
       return;
     }
-    kitAbilities.remove(name);
+    iKitAbilities.remove(name);
   }
 
-  public Map<String, KitAbility> getKitAbilities() {
-    return Collections.unmodifiableMap(kitAbilities);
+  public Map<String, IKitAbility> getiKitAbilities() {
+    return Collections.unmodifiableMap(iKitAbilities);
   }
 }

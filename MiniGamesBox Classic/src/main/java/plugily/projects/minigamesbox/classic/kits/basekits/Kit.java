@@ -64,7 +64,7 @@ public class Kit implements IKit {
   private ItemStack kitChestplate;
   private ItemStack kitLeggings;
   private ItemStack kitBoots;
-  private final List<KitAbility> kitAbilities = new ArrayList<>();
+  private final List<IKitAbility> kitAbilities = new ArrayList<>();
 
   public Kit(String key, String name, List<String> description, ItemStack itemStack) {
     this.key = key;
@@ -250,14 +250,14 @@ public class Kit implements IKit {
     optionalConfiguration.put(path, object);
   }
 
-  public List<KitAbility> getAbilities() {
+  public List<IKitAbility> getAbilities() {
     return kitAbilities;
   }
 
   public void setAbilities(List<String> list) {
     for(String abilityName : list) {
       try {
-        kitAbilities.add(plugin.getKitAbilityManager().getKitAbility(abilityName));
+        kitAbilities.add(plugin.getKitAbilityManager().getIKitAbility(abilityName));
       } catch(IllegalArgumentException exception) {
         plugin.getDebugger().debug(Level.SEVERE, "The kit-ability " + abilityName + " isn't known. Check your kit folder!");
       }

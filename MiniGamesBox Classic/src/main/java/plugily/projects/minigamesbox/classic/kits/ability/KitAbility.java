@@ -21,8 +21,10 @@ package plugily.projects.minigamesbox.classic.kits.ability;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import plugily.projects.minigamesbox.api.kit.ability.IKitAbility;
@@ -30,7 +32,6 @@ import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.helper.ArmorHelper;
-import plugily.projects.minigamesbox.classic.utils.version.events.api.PlugilyPlayerInteractEvent;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,42 +42,36 @@ public class KitAbility implements IKitAbility {
   private static final PluginMain plugin = JavaPlugin.getPlugin(PluginMain.class);
   private static final Map<String, KitAbility> kitAbilities = new HashMap<>();
 
-  static {
-    kitAbilities.put("NO_ARMOUR", new KitAbility("NO_ARMOUR", inventoryClickEvent -> {
-      if(!(inventoryClickEvent.getInventory().getType().equals(InventoryType.PLAYER) || inventoryClickEvent.getInventory().getType().equals(InventoryType.CRAFTING))) {
-        return;
-      }
-      IUser user = plugin.getUserManager().getUser((Player) inventoryClickEvent.getWhoClicked());
-      Bukkit.getScheduler().runTaskLater(plugin, () -> {
-        for(ItemStack stack : inventoryClickEvent.getWhoClicked().getInventory().getArmorContents()) {
-          if(stack == null || !ArmorHelper.getArmorTypes().contains(stack.getType())) {
-            continue;
-          }
-          //we cannot cancel event using scheduler, we must remove all armor contents from inventory manually
-          new MessageBuilder("KIT_CANNOT_WEAR_ARMOR").asKey().send(user.getPlayer());
-          inventoryClickEvent.getWhoClicked().getInventory().setHelmet(new ItemStack(Material.AIR, 1));
-          inventoryClickEvent.getWhoClicked().getInventory().setChestplate(new ItemStack(Material.AIR, 1));
-          inventoryClickEvent.getWhoClicked().getInventory().setLeggings(new ItemStack(Material.AIR, 1));
-          inventoryClickEvent.getWhoClicked().getInventory().setBoots(new ItemStack(Material.AIR, 1));
-          return;
-        }
-      }, 1);
-    }, playerInteractHandler -> {
-      if(ArmorHelper.getArmorTypes().contains(playerInteractHandler.getItem().getType())) {
-        playerInteractHandler.setCancelled(true);
-        new MessageBuilder("KIT_CANNOT_WEAR_ARMOR").asKey().player(playerInteractHandler.getPlayer()).sendPlayer();
-      }
-    }));
-  }
+//  static {
+//    kitAbilities.put("NO_ARMOUR", new KitAbility("NO_ARMOUR", event -> {
+//      InventoryClickEvent inventoryClickEvent = (InventoryClickEvent) event;
+//      if(!(inventoryClickEvent.getInventory().getType().equals(InventoryType.PLAYER) || inventoryClickEvent.getInventory().getType().equals(InventoryType.CRAFTING))) {
+//        return;
+//      }
+//      IUser user = plugin.getUserManager().getUser((Player) inventoryClickEvent.getWhoClicked());
+//      Bukkit.getScheduler().runTaskLater(plugin, () -> {
+//        for(ItemStack stack : inventoryClickEvent.getWhoClicked().getInventory().getArmorContents()) {
+//          if(stack == null || !ArmorHelper.getArmorTypes().contains(stack.getType())) {
+//            continue;
+//          }
+//          //we cannot cancel event using scheduler, we must remove all armor contents from inventory manually
+//          new MessageBuilder("KIT_CANNOT_WEAR_ARMOR").asKey().send(user.getPlayer());
+//          inventoryClickEvent.getWhoClicked().getInventory().setHelmet(new ItemStack(Material.AIR, 1));
+//          inventoryClickEvent.getWhoClicked().getInventory().setChestplate(new ItemStack(Material.AIR, 1));
+//          inventoryClickEvent.getWhoClicked().getInventory().setLeggings(new ItemStack(Material.AIR, 1));
+//          inventoryClickEvent.getWhoClicked().getInventory().setBoots(new ItemStack(Material.AIR, 1));
+//          return;
+//        }
+//      }, 1);
+//    }));
+//  }
 
   private final String name;
-  private final Consumer<InventoryClickEvent> clickConsumer;
-  private final Consumer<PlugilyPlayerInteractEvent> interactConsumer;
+  private final Consumer<Event> event;
 
-  public KitAbility(String name, Consumer<InventoryClickEvent> inventoryClickHandler, Consumer<PlugilyPlayerInteractEvent> playerInteractHandler) {
+  public KitAbility(String name, Consumer<Event> event) {
     this.name = name;
-    this.clickConsumer = inventoryClickHandler;
-    this.interactConsumer = playerInteractHandler;
+    this.event = event;
   }
 
   @Override
@@ -85,15 +80,12 @@ public class KitAbility implements IKitAbility {
   }
 
   @Override
-  public Consumer<InventoryClickEvent> getClickConsumer() {
-    return clickConsumer;
+  public Consumer<Event> getEvent() {
+    return event;
   }
 
-  public Consumer<PlugilyPlayerInteractEvent> getInteractConsumer() {
-    return interactConsumer;
-  }
 
-  public static Map<String, KitAbility> getKitAbilities() {
+  public static Map<String, IKitAbility> getKitAbilities() {
     return Collections.unmodifiableMap(kitAbilities);
   }
 }

@@ -22,6 +22,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import plugily.projects.minigamesbox.api.kit.ability.IKitAbility;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.utils.version.events.api.PlugilyPlayerInteractEvent;
@@ -38,36 +39,35 @@ public class KitAbilityHandler implements Listener {
     plugin.getServer().getPluginManager().registerEvents(this, plugin);
   }
 
-  @EventHandler
-  public void onKitInventoryClick(InventoryClickEvent event) {
-    if(!(event.getWhoClicked() instanceof Player)) {
-      return;
-    }
-    IUser user = plugin.getUserManager().getUser((Player) event.getWhoClicked());
-    if(!plugin.getArenaRegistry().isInArena((Player) event.getWhoClicked())) {
-      return;
-    }
-    for(KitAbility kitAbility : plugin.getKitAbilityManager().getKitAbilities().values()) {
-      if(user.getKit().hasAbility(kitAbility)) {
-        kitAbility.getClickConsumer().accept(event);
-      }
-    }
-  }
-
-  @EventHandler
-  public void onKitInteractClick(PlugilyPlayerInteractEvent event) {
-    if(!plugin.getArenaRegistry().isInArena(event.getPlayer())) {
-      return;
-    }
-    if(!event.hasItem()) {
-      return;
-    }
-    for(KitAbility kitAbility : plugin.getKitAbilityManager().getKitAbilities().values()) {
-      if(plugin.getUserManager().getUser(event.getPlayer()).getKit().hasAbility(kitAbility)) {
-        kitAbility.getInteractConsumer().accept(event);
-      }
-    }
-
-  }
+//  @EventHandler
+//  public void onKitInventoryClick(InventoryClickEvent event) {
+//    if(!(event.getWhoClicked() instanceof Player)) {
+//      return;
+//    }
+//    IUser user = plugin.getUserManager().getUser((Player) event.getWhoClicked());
+//    if(!plugin.getArenaRegistry().isInArena((Player) event.getWhoClicked())) {
+//      return;
+//    }
+//    for(KitAbility kitAbility : plugin.getKitAbilityManager().getKitAbilities().values()) {
+//      if(user.getKit().hasAbility(kitAbility)) {
+//        kitAbility.getClickConsumer().accept(event);
+//      }
+//    }
+//  }
+//
+//  @EventHandler
+//  public void onKitInteractClick(PlugilyPlayerInteractEvent event) {
+//    if(!plugin.getArenaRegistry().isInArena(event.getPlayer())) {
+//      return;
+//    }
+//    if(!event.hasItem()) {
+//      return;
+//    }
+//    for(KitAbility kitAbility : plugin.getKitAbilityManager().getKitAbilities().values()) {
+//      if(plugin.getUserManager().getUser(event.getPlayer()).getKit().hasAbility(kitAbility)) {
+//        kitAbility.getInteractConsumer().accept(event);
+//      }
+//    }
+//  }
 
 }
