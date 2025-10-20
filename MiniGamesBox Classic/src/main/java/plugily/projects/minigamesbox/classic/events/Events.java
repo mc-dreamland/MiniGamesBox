@@ -22,6 +22,7 @@ import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XTag;
 import com.cryptomorin.xseries.inventory.XInventoryView;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -198,6 +199,23 @@ public class Events implements Listener {
       event.setCancelled(true);
     }
   }
+
+//    @EventHandler
+//  public void onCraft(PlugilyPlayerInteractEvent event) {
+//    IPluginArena arena = plugin.getArenaRegistry().getArena(event.getPlayer());
+//    if(arena == null || event.getClickedBlock() == null) {
+//      return;
+//    }
+//    Material type = event.getClickedBlock().getType();
+//    if(type == XMaterial.CRAFTING_TABLE.parseMaterial()) {
+//      if(VersionUtils.isRightClick(event.getAction())) {
+//        event.setCancelled(true);
+//      }
+//    }
+//    if(type == XMaterial.PAINTING.parseMaterial() || type == XMaterial.FLOWER_POT.parseMaterial()) {
+//      event.setCancelled(true);
+//    }
+//  }
 
   @EventHandler
   public void onInGameBedEnter(PlayerBedEnterEvent event) {
