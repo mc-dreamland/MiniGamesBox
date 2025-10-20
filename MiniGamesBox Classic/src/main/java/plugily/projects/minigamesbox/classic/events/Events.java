@@ -184,38 +184,38 @@ public class Events implements Listener {
     }
   }
 
-  @EventHandler
-  public void onCraft(PlugilyPlayerInteractEvent event) {
-    IPluginArena arena = plugin.getArenaRegistry().getArena(event.getPlayer());
-    if(arena == null || event.getClickedBlock() == null) {
-      return;
-    }
-    if(event.getPlayer().getTargetBlock(null, 7).getType() == XMaterial.CRAFTING_TABLE.parseMaterial()) {
-      if(VersionUtils.isRightClick(event.getAction())) {
-        event.setCancelled(true);
-      }
-    }
-    if(event.getClickedBlock().getType() == XMaterial.PAINTING.parseMaterial() || event.getClickedBlock().getType() == XMaterial.FLOWER_POT.parseMaterial()) {
-      event.setCancelled(true);
-    }
-  }
-
-//    @EventHandler
+//  @EventHandler
 //  public void onCraft(PlugilyPlayerInteractEvent event) {
 //    IPluginArena arena = plugin.getArenaRegistry().getArena(event.getPlayer());
 //    if(arena == null || event.getClickedBlock() == null) {
 //      return;
 //    }
-//    Material type = event.getClickedBlock().getType();
-//    if(type == XMaterial.CRAFTING_TABLE.parseMaterial()) {
+//    if(event.getPlayer().getTargetBlock(null, 7).getType() == XMaterial.CRAFTING_TABLE.parseMaterial()) {
 //      if(VersionUtils.isRightClick(event.getAction())) {
 //        event.setCancelled(true);
 //      }
 //    }
-//    if(type == XMaterial.PAINTING.parseMaterial() || type == XMaterial.FLOWER_POT.parseMaterial()) {
+//    if(event.getClickedBlock().getType() == XMaterial.PAINTING.parseMaterial() || event.getClickedBlock().getType() == XMaterial.FLOWER_POT.parseMaterial()) {
 //      event.setCancelled(true);
 //    }
 //  }
+
+    @EventHandler
+  public void onCraft(PlugilyPlayerInteractEvent event) {
+    IPluginArena arena = plugin.getArenaRegistry().getArena(event.getPlayer());
+    if(arena == null || event.getClickedBlock() == null) {
+      return;
+    }
+    Material type = event.getClickedBlock().getType();
+    if(type == XMaterial.CRAFTING_TABLE.parseMaterial()) {
+      if(VersionUtils.isRightClick(event.getAction())) {
+        event.setCancelled(true);
+      }
+    }
+    if(type == XMaterial.PAINTING.parseMaterial() || type == XMaterial.FLOWER_POT.parseMaterial()) {
+      event.setCancelled(true);
+    }
+  }
 
   @EventHandler
   public void onInGameBedEnter(PlayerBedEnterEvent event) {

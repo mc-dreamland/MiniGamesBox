@@ -117,6 +117,8 @@ public class LanguageManager implements ILanguageManager {
         plugin.getDebugger().debug(Level.WARNING, "&aDownloaded locale " + pluginLocale.getPrefix() + " properly!");
       } else if(status == LocaleService.DownloadStatus.LATEST) {
         plugin.getDebugger().debug(Level.WARNING, "&aLocale " + pluginLocale.getPrefix() + " is latest! Awesome!");
+      }else if (status == LocaleService.DownloadStatus.SKIP){
+        plugin.getDebugger().debug(Level.WARNING, "&eLocale " + pluginLocale.getPrefix() + " download was skipped as requested!");
       }
     } else {
       pluginLocale = LocaleRegistry.getByName("Default");
