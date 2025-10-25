@@ -21,8 +21,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
+import plugily.projects.minigamesbox.api.arena.IPluginArena;
+import plugily.projects.minigamesbox.api.arena.IPluginArenaRegistry;
 import plugily.projects.minigamesbox.api.events.game.PlugilyGameStateChangeEvent;
 import plugily.projects.minigamesbox.classic.PluginMain;
+import plugily.projects.minigamesbox.classic.arena.states.ArenaState;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 
 /**
@@ -41,38 +44,24 @@ public class BungeeEvents implements Listener {
 
   @EventHandler
   public void onLogin(PlayerLoginEvent e) {
+    if (e.getResult() != PlayerLoginEvent.Result.ALLOWED) {
+      return;
+    }
     if(!plugin.getServer().hasWhitelist() || e.getResult() != PlayerLoginEvent.Result.KICK_WHITELIST) {
       return;
     }
+    IPluginArenaRegistry arenaRegistry = plugin.getArenaRegistry();
+    IPluginArena iPluginArena = arenaRegistry.getArenas().get(arenaRegistry.getBungeeArena());
     if(e.getPlayer().hasPermission(plugin.getPluginNamePrefixLong() +".fullgames")) {
       e.setResult(PlayerLoginEvent.Result.ALLOWED);
+    } else if (IArenaState.IN_GAME == iPluginArena.getArenaState() && iPluginArena.getPlayers().size() >= iPluginArena.getMaximumPlayers()) {
+      e.setResult(PlayerLoginEvent.Result.KICK_FULL);
     }
 
-    if(!plugin.getArenaRegistry().getArenas().isEmpty()) {
-      VersionUtils.teleport(e.getPlayer(), plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena()).getLobbyLocation());
+    if(!arenaRegistry.getArenas().isEmpty()) {
+      VersionUtils.teleport(e.getPlayer(), arenaRegistry.getArenas().get(arenaRegistry.getBungeeArena()).getLobbyLocation());
     }
   }
 
-  @EventHandler
-  public void onGameStateChange(PlugilyGameStateChangeEvent e) {
-    switch(e.getArenaState()) {
-      case WAITING_FOR_PLAYERS:
-        plugin.getServer().setWhitelist(false);
-        break;
-      case IN_GAME:
-        plugin.getServer().setWhitelist(e.getArena().getMaximumPlayers() <= e.getArena().getPlayers().size());
-        break;
-      case ENDING:
-        plugin.getServer().setWhitelist(false);
-        break;
-      case STARTING:
-      case RESTARTING:
-      default:
-        break;
-    }
-    if(e.getArenaState() == IArenaState.ENDING) {
-      plugin.getServer().setWhitelist(false);
-    }
-  }
 
 }
