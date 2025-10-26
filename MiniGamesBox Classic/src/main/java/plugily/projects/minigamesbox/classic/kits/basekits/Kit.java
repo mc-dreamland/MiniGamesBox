@@ -48,7 +48,7 @@ public class Kit implements IKit {
 
   private String name;
 
-  private final String key;
+  private final String KitFileName;
 
   private final ItemStack itemStack;
 
@@ -66,10 +66,10 @@ public class Kit implements IKit {
   private ItemStack kitBoots;
   private final List<IKitAbility> kitAbilities = new ArrayList<>();
 
-  public Kit(String key, String name, List<String> description, ItemStack itemStack) {
-    this.key = key;
+  public Kit(String KitFileName, String name, List<String> description, ItemStack itemStack) {
+    this.KitFileName = KitFileName;
     this.name = name;
-    this.kitsConfig = ConfigUtils.getConfig(plugin, "/kits/" + key);
+    this.kitsConfig = ConfigUtils.getConfig(plugin, "/kits/" + KitFileName);
     this.description = description;
     this.itemStack = itemStack;
   }
@@ -115,8 +115,8 @@ public class Kit implements IKit {
   }
 
   public void saveKitsConfig() {
-    ConfigUtils.saveConfig(plugin, kitsConfig, "/kits/" + key);
-    kitsConfig = ConfigUtils.getConfig(plugin, "/kits/" + key);
+    ConfigUtils.saveConfig(plugin, kitsConfig, "/kits/" + KitFileName);
+    kitsConfig = ConfigUtils.getConfig(plugin, "/kits/" + KitFileName);
   }
 
   @Override
@@ -136,11 +136,11 @@ public class Kit implements IKit {
   }
 
   @Override
-  public String getKey() {
-    if(key.isEmpty()) {
+  public String getKitFileName() {
+    if(KitFileName.isEmpty()) {
       return name;
     }
-    return key;
+    return KitFileName;
   }
 
   @Override
@@ -182,7 +182,7 @@ public class Kit implements IKit {
    * @return Returns the configuration path for the kit
    */
   public String getKitConfigPath() {
-    return key;
+    return KitFileName;
   }
 
 

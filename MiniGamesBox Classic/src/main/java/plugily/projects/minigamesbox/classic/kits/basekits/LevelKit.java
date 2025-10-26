@@ -33,8 +33,8 @@ public class LevelKit extends Kit {
 
   private int level;
 
-  public LevelKit(String key, String name, List<String> description, ItemStack itemStack) {
-    super(key, name, description, itemStack);
+  public LevelKit(String kit_name, String name, List<String> description, ItemStack itemStack) {
+    super(kit_name, name, description, itemStack);
   }
 
   public int getLevel() {

@@ -32,8 +32,8 @@ import java.util.List;
  */
 public class FreeKit extends Kit {
 
-  public FreeKit(String key, String name, List<String> description, ItemStack itemStack) {
-    super(key, name, description, itemStack);
+  public FreeKit(String kit_name, String name, List<String> description, ItemStack itemStack) {
+    super(kit_name, name, description, itemStack);
   }
 
   /**

@@ -31,12 +31,19 @@ import java.util.List;
  */
 public class PremiumKit extends Kit {
 
-  public PremiumKit(String key, String name, List<String> description, ItemStack itemStack) {
-    super(key, name, description, itemStack);
+  private String permissionKey= "";
+
+  public PremiumKit(String kitFileName, String name, List<String> description, ItemStack itemStack) {
+    super(kitFileName, name, description, itemStack);
+    this.permissionKey = kitFileName;
   }
 
   @Override
   public boolean isUnlockedByPlayer(Player player) {
-    return player.hasPermission(getPlugin().getPluginNamePrefixLong() + ".kits.locked") || player.hasPermission(getPlugin().getPluginNamePrefixLong() + ".kit." + getKey().toLowerCase());
+    return player.hasPermission(getPlugin().getPluginNamePrefixLong() + ".kits.locked") || player.hasPermission(getPlugin().getPluginNamePrefixLong() + ".kit." + permissionKey);
+  }
+
+  public void setPermissionKey(String permissionKey) {
+    this.permissionKey = permissionKey;
   }
 }

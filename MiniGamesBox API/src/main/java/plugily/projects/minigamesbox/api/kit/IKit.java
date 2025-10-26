@@ -32,7 +32,7 @@ public interface IKit {
    */
   String getName();
 
-  String getKey();
+  String getKitFileName();
 
   ItemStack getItemStack();
 

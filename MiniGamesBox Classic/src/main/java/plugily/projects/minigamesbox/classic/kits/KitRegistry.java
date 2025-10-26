@@ -70,21 +70,21 @@ public class KitRegistry implements IKitRegistry {
   public void registerKit(IKit kit) {
     if (!plugin.getConfigPreferences().getOption("KITS")) {
       plugin.getDebugger().performance("Kit", "Kits are disabled, thus registerKit method will not be ran.");
-      plugin.getDebugger().debug("Kit " + kit.getKey() + " can't be added as kits are disabled");
+      plugin.getDebugger().debug("Kit " + kit.getKitFileName() + " can't be added as kits are disabled");
       return;
     }
     if (kits.contains(kit)) {
-      plugin.getDebugger().debug("Kit " + kit.getKey() + " can't be added as its already registered");
+      plugin.getDebugger().debug("Kit " + kit.getKitFileName() + " can't be added as its already registered");
       return;
     }
 
     ConfigurationSection configurationSection = kit.getKitConfigSection();
     if (configurationSection != null && !configurationSection.getBoolean("enabled", false)) {
-      plugin.getDebugger().debug("Kit " + kit.getKey() + " is disabled by kit file");
+      plugin.getDebugger().debug("Kit " + kit.getKitFileName() + " is disabled by kit file");
       return;
     }
 
-    plugin.getDebugger().debug("Registered {0} kit", kit.getKey());
+    plugin.getDebugger().debug("Registered {0} kit", kit.getKitFileName());
     kits.add(kit);
   }
 
@@ -106,9 +106,10 @@ public class KitRegistry implements IKitRegistry {
         return;
       }
       for (File file : kitsFiles) {
-        plugin.getDebugger().debug(Level.INFO, "Trying to load " + ConfigUtils.removeExtension(file.getName()));
-        FileConfiguration kitsConfig = ConfigUtils.getConfig(plugin, "/kits/" + ConfigUtils.removeExtension(file.getName()));
-        loadKitConfig(ConfigUtils.removeExtension(file.getName()), kitsConfig, optionalConfigurations);
+        String kitFileName = ConfigUtils.removeExtension(file.getName());
+        plugin.getDebugger().debug(Level.INFO, "Trying to load " + kitFileName);
+        FileConfiguration kitsConfig = ConfigUtils.getConfig(plugin, "/kits/" + kitFileName);
+        loadKitConfig(kitFileName, kitsConfig, optionalConfigurations);
       }
     } catch (Exception exception) {
       plugin.getDebugger().debug(Level.WARNING, "ERROR IN LOADING KITS");
@@ -120,15 +121,15 @@ public class KitRegistry implements IKitRegistry {
    *
    * @param kitsConfig the yml of the kit to load the configuration for
    */
-  public void loadKitConfig(String kit_key, FileConfiguration kitsConfig, List<String> optionalConfigurations) {
-    plugin.getDebugger().debug(Level.INFO, "Loading Kit " + kit_key + " ...");
+  public void loadKitConfig(String kitFileName, FileConfiguration kitsConfig, List<String> optionalConfigurations) {
+    plugin.getDebugger().debug(Level.INFO, "Loading Kit " + kitFileName + " ...");
 
     if (!kitsConfig.getBoolean("enabled", false)) {
-      plugin.getDebugger().debug("Kit " + kit_key + " is disabled by kit file");
+      plugin.getDebugger().debug("Kit " + kitFileName + " is disabled by kit file");
       return;
     }
 
-    String kit_name = kitsConfig.getString("name", kit_key);
+    String kit_name = kitsConfig.getString("name", kitFileName);
     List<String> kit_description = kitsConfig.getStringList("description");
 
     ItemStack itemStack = XMaterial.BEDROCK.parseItem();
@@ -139,8 +140,8 @@ public class KitRegistry implements IKitRegistry {
     String kitType = kitsConfig.getString("kit_type");
 
     if (kitType == null) {
-      plugin.getDebugger().debug(Level.SEVERE, "Kit " + kit_key + " kit_type is null.");
-      plugin.getDebugger().debug(Level.SEVERE, "Kit " + kit_key + " will not be loaded.");
+      plugin.getDebugger().debug(Level.SEVERE, "Kit " + kitFileName + " kit_type is null.");
+      plugin.getDebugger().debug(Level.SEVERE, "Kit " + kitFileName + " will not be loaded.");
       return;
     }
 
@@ -148,28 +149,29 @@ public class KitRegistry implements IKitRegistry {
 
     switch (kitType) {
       case "free": {
-        kit = new FreeKit(kit_key, kit_name, kit_description, itemStack);
+        kit = new FreeKit(kitFileName, kit_name, kit_description, itemStack);
         break;
       }
       case "level": {
-        kit = new LevelKit(kit_key, kit_name, kit_description, itemStack);
+        kit = new LevelKit(kitFileName, kit_name, kit_description, itemStack);
         ((LevelKit) kit).setLevel(kitsConfig.getInt("required-level"));
         break;
       }
       case "premium": {
-        kit = new PremiumKit(kit_key, kit_name, kit_description, itemStack);
+        kit = new PremiumKit(kitFileName, kit_name, kit_description, itemStack);
+        ((PremiumKit)kit).setPermissionKey(kitsConfig.getString("permission-key"));
         break;
       }
       default: {
-        plugin.getDebugger().debug(Level.SEVERE, "Kit " + kit_key + " kit_type is not recognised.");
-        plugin.getDebugger().debug(Level.SEVERE, "Kit " + kit_key + " will not be loaded.");
+        plugin.getDebugger().debug(Level.SEVERE, "Kit " + kitFileName + " kit_type is not recognised.");
+        plugin.getDebugger().debug(Level.SEVERE, "Kit " + kitFileName + " will not be loaded.");
         return;
       }
     }
 
     if (kitsConfig.getString("unlockedOnDefault") == null) {
-      plugin.getDebugger().debug(Level.SEVERE, "Kit " + kit_key + " does not have an unlockedOnDefault configuration.");
-      plugin.getDebugger().debug(Level.SEVERE, "Kit " + kit_key + " will not be loaded.");
+      plugin.getDebugger().debug(Level.SEVERE, "Kit " + kitFileName + " does not have an unlockedOnDefault configuration.");
+      plugin.getDebugger().debug(Level.SEVERE, "Kit " + kitFileName + " will not be loaded.");
       return;
     }
     kit.setUnlockedOnDefault(kitsConfig.getBoolean("unlockedOnDefault"));
@@ -192,8 +194,8 @@ public class KitRegistry implements IKitRegistry {
       });
       kit.setKitItems(kitItems);
     } else {
-      plugin.getDebugger().debug(Level.SEVERE, "The kit " + kit.getKey() + " does not have an inventory configuration section.");
-      plugin.getDebugger().debug(Level.SEVERE, "The kit " + kit.getKey() + " will not give any inventory items.");
+      plugin.getDebugger().debug(Level.SEVERE, "The kit " + kit.getKitFileName() + " does not have an inventory configuration section.");
+      plugin.getDebugger().debug(Level.SEVERE, "The kit " + kit.getKitFileName() + " will not give any inventory items.");
     }
 
 
@@ -220,8 +222,8 @@ public class KitRegistry implements IKitRegistry {
         kit.setKitBoots(XItemStack.deserialize(bootsConfigurationSection));
       }
     } else {
-      plugin.getDebugger().debug(Level.SEVERE, "The kit " + kit.getKey() + " does not have an armour configuration section.");
-      plugin.getDebugger().debug(Level.SEVERE, "The kit " + kit.getKey() + " will not give any armour items.");
+      plugin.getDebugger().debug(Level.SEVERE, "The kit " + kit.getKitFileName() + " does not have an armour configuration section.");
+      plugin.getDebugger().debug(Level.SEVERE, "The kit " + kit.getKitFileName() + " will not give any armour items.");
     }
 
     List<String> kit_actions = kitsConfig.getStringList("abilities");
@@ -231,12 +233,12 @@ public class KitRegistry implements IKitRegistry {
       optionalConfigurations.forEach((configuration) -> {
         if (kitsConfig.contains(configuration)) {
           kit.addOptionalConfiguration(configuration, kitsConfig.get(configuration));
-          plugin.getDebugger().debug("Kit " + kit.getKey() + " has optional configuration " + configuration);
+          plugin.getDebugger().debug("Kit " + kit.getKitFileName() + " has optional configuration " + configuration);
         }
       });
     }
 
-    plugin.getDebugger().debug("Kit " + kit.getKey() + " loaded.");
+    plugin.getDebugger().debug("Kit " + kit.getKitFileName() + " loaded.");
     kits.add(kit);
   }
 
@@ -273,7 +275,7 @@ public class KitRegistry implements IKitRegistry {
         plugin.onDisable();
         return;
       }
-      plugin.getDebugger().debug("Default kit {0} not found, using {1}", defaultKitKey, defaultKit.get().getKey());
+      plugin.getDebugger().debug("Default kit {0} not found, using {1}", defaultKitKey, defaultKit.get().getKitFileName());
     }
     this.plugin.getDebugger().debug("DefaultKit set to {0}", defaultKit.get().getName());
     this.defaultKit = defaultKit.get();
@@ -288,7 +290,7 @@ public class KitRegistry implements IKitRegistry {
   @Override
   public IKit getKitByKey(String key) {
     for (IKit kit : kits) {
-      if (kit.getKey().equalsIgnoreCase(key)) {
+      if (kit.getKitFileName().equalsIgnoreCase(key)) {
         return kit;
       }
     }
