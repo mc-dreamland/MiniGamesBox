@@ -46,7 +46,7 @@ public interface IUser {
 
   boolean checkCanCastCooldownAndMessage(String cooldown);
 
-  void setCooldown(String key, double seconds);
+  void setCooldown(String key, long seconds);
 
   double getCooldown(String key);
 

@@ -40,13 +40,13 @@ import java.util.UUID;
 public class User implements IUser {
 
   private static PluginMain plugin;
-  private static long cooldownCounter = 0;
+//  private static long cooldownCounter = 0;
   private final UUID uuid;
   private boolean spectator = false;
   private boolean permanentSpectator = false;
   private IKit kit;
   private final Map<IStatisticType, Long> stats = new HashMap<>();
-  private final Map<String, Double> cooldowns = new HashMap<>();
+  private final Map<String, Long> cooldowns = new HashMap<>();
   private boolean initialized;
 
   public User(UUID uuid) {
@@ -62,9 +62,9 @@ public class User implements IUser {
     User.plugin = plugin;
   }
 
-  public static void cooldownHandlerTask() {
-    Bukkit.getScheduler().runTaskTimer(plugin, () -> cooldownCounter++, 20, 20);
-  }
+//  public static void cooldownHandlerTask() {
+//    Bukkit.getScheduler().runTaskTimer(plugin, () -> cooldownCounter++, 20, 20);
+//  }
 
   @Override
   public IKit getKit() {
@@ -174,14 +174,14 @@ public class User implements IUser {
   }
 
   @Override
-  public void setCooldown(String key, double seconds) {
-    cooldowns.put(key, seconds + cooldownCounter);
+  public void setCooldown(String key, long seconds) {
+    cooldowns.put(key, seconds + System.currentTimeMillis());
   }
 
   @Override
   public double getCooldown(String key) {
-    double cooldown = cooldowns.getOrDefault(key, 0.0);
-    return cooldown <= cooldownCounter ? 0 : cooldown - cooldownCounter;
+    double cooldown = cooldowns.getOrDefault(key, 0L);
+    return cooldown <= System.currentTimeMillis() ? 0 : cooldown - System.currentTimeMillis();
   }
 
   @Override

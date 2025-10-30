@@ -229,7 +229,7 @@ public class PluginMain extends JavaPlugin implements IPluginMain {
     partyHandler = new PartySupportInitializer().initialize(this);
     kitRegistry = new KitRegistry(this);
     User.init(this);
-    User.cooldownHandlerTask();
+//    User.cooldownHandlerTask();
     userManager = new UserManager(this);
     placeholderManager = new PlaceholderManager(this);
     statsStorage = new StatsStorage(this);
