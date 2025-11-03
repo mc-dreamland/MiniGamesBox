@@ -89,10 +89,10 @@ public class BossbarManager implements IBossbarManager {
     if (arena.getArenaOption("BAR_TOGGLE_VALUE") > interval) {
       currentLine++;
       arena.setArenaOption("BAR_TOGGLE_VALUE", 0);
-      arena.changeArenaOptionBy("BAR_TOGGLE_VALUE", 1);
+      arena.incrementArenaOption("BAR_TOGGLE_VALUE", 1);
     }
 
-    arena.changeArenaOptionBy("BAR_TOGGLE_VALUE", 1);
+    arena.incrementArenaOption("BAR_TOGGLE_VALUE", 1);
   }
 
 

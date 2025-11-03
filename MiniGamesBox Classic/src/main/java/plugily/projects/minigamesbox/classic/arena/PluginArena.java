@@ -123,7 +123,7 @@ public class PluginArena extends BukkitRunnable implements IPluginArena {
     arenaOption.setValue(value);
   }
 
-  public void changeArenaOptionBy(String name, int value) {
+  public void incrementArenaOption(String name, int value) {
     ArenaOption arenaOption = arenaOptions.get(name);
 
     if(arenaOption == null) {
@@ -131,6 +131,15 @@ public class PluginArena extends BukkitRunnable implements IPluginArena {
     }
 
     arenaOption.setValue(arenaOption.getValue() + value);
+  }
+  public void decrementArenaOption(String name, int value) {
+    ArenaOption arenaOption = arenaOptions.get(name);
+
+    if(arenaOption == null) {
+      throw new IllegalStateException("Option with name " + name + " does not exist");
+    }
+
+    arenaOption.setValue(arenaOption.getValue() - value);
   }
 
 
