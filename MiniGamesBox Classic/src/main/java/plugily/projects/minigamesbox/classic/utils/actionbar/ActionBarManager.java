@@ -81,7 +81,7 @@ public class ActionBarManager extends BukkitRunnable {
             if(flashing.containsKey(actionBar.getKey())) {
               List<String> messages = plugin.getLanguageManager().getLanguageListFromKey(actionBar.getKey());
               int size = flashing.get(actionBar.getKey());
-              if(size >= messages.size()) {
+              if(size >= messages.size()-1) {
                 flashing.put(actionBar.getKey(), 0);
               } else {
                 flashing.put(actionBar.getKey(), size + 1);
@@ -89,7 +89,7 @@ public class ActionBarManager extends BukkitRunnable {
               VersionUtils.sendActionBar(player, new MessageBuilder(messages.get(size)).integer((actionBar.getTicks() - actionBar.getExecutedTicks()) / 20).player(player).arena(arena).build());
               break;
             }
-            flashing.put(actionBar.getKey(), -1);
+            flashing.put(actionBar.getKey(), 0);
             break;
           case DISPLAY:
           case SHOW_PERMANENT:
@@ -98,7 +98,7 @@ public class ActionBarManager extends BukkitRunnable {
           case PROGRESS:
             String progress = StringFormatUtils.getProgressBar(actionBar.getExecutedTicks() + 10, actionBar.getTicks(),
                 10, "█", ChatColor.COLOR_CHAR + "a", ChatColor.COLOR_CHAR + "c");
-            VersionUtils.sendActionBar(player, actionBar.getMessage().value(progress).integer((actionBar.getTicks() - actionBar.getExecutedTicks()) / 20).player(player).arena(arena).build());
+            VersionUtils.sendActionBar(player, actionBar.getMessage().asKey().value(progress).integer((actionBar.getTicks() - actionBar.getExecutedTicks()) / 20).player(player).arena(arena).build());
             break;
           default:
             break;
@@ -157,7 +157,7 @@ public class ActionBarManager extends BukkitRunnable {
   }
 
   public void clearActionBarsFromPlayer(Player player, ActionBar.ActionBarType actionBarType) {
-    List<ActionBar> bars = new ArrayList<>(actionBars.get(player));
+    List<ActionBar> bars = new ArrayList<>(actionBars.computeIfAbsent(player,k->new ArrayList<>()));
     actionBars.remove(player);
     actionBars.put(player, bars.stream().filter(bar -> bar.getActionBarType() != actionBarType).collect(Collectors.toList()));
   }
