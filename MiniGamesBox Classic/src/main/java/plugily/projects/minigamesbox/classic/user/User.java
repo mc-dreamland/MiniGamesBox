@@ -174,8 +174,8 @@ public class User implements IUser {
   }
 
   @Override
-  public void setCooldown(String key, long seconds) {
-    cooldowns.put(key, seconds + System.currentTimeMillis());
+  public void setCooldown(String key, long milliseconds) {
+    cooldowns.put(key, milliseconds + System.currentTimeMillis());
   }
 
   @Override
