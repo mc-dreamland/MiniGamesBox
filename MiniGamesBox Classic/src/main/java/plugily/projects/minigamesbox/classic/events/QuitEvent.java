@@ -47,10 +47,10 @@ public class QuitEvent implements Listener {
     onQuit(event.getPlayer());
   }
 
-  @EventHandler
-  public void onKick(PlayerKickEvent event) {
-    onQuit(event.getPlayer());
-  }
+//  @EventHandler
+//  public void onKick(PlayerKickEvent event) {
+//    onQuit(event.getPlayer());
+//  }
 
   private void onQuit(Player player) {
     plugin
@@ -58,13 +58,13 @@ public class QuitEvent implements Listener {
         .removeSpecialItemsOfStage(player, SpecialItem.DisplayStage.SERVER_JOIN);
     IPluginArena arena = plugin.getArenaRegistry().getArena(player);
     if (arena != null) {
-      plugin.getArenaManager().leaveAttempt(player, arena);
       plugin.getUserManager().storeUserQuitDuringGame(player, arena);
-    }
-    IUser user = plugin.getUserManager().getUser(player);
-    plugin.getUserManager().saveAllStatistic(user);
-    plugin.getUserManager().removeUser(user);
+      IUser user = plugin.getUserManager().getUser(player);
+      plugin.getUserManager().saveAllStatistic(user);
+      plugin.getUserManager().removeUser(user);
+      plugin.getArenaManager().leaveAttempt(player, arena);
 
-    plugin.getArgumentsRegistry().getSpyChat().disableSpyChat(player);
+      plugin.getArgumentsRegistry().getSpyChat().disableSpyChat(player);
+    }
   }
 }

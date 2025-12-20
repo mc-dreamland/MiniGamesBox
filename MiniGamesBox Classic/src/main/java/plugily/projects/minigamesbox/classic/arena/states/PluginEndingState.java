@@ -20,6 +20,7 @@ package plugily.projects.minigamesbox.classic.arena.states;
 
 import org.bukkit.entity.Player;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
+import plugily.projects.minigamesbox.api.user.IUserManager;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.arena.PluginArena;
 
@@ -47,8 +48,10 @@ public class PluginEndingState implements ArenaStateHandler {
     plugin.getDebugger().performance("ArenaUpdate","START Arena {0} Running state {1} value for state {2} and time {3}", arena.getId(), IArenaState.ENDING, arenaState, arenaTimer);
 
     if(arena.getTimer() <= 0) {
+      IUserManager userManager = plugin.getUserManager();
       for(Player player : arena.getPlayers()) {
         plugin.getRewardsHandler().performReward(player, arena, plugin.getRewardsHandler().getRewardType("END_GAME"));
+        userManager.saveAllStatistic(userManager.getUser(player));
       }
       arenaTimer = plugin.getConfig().getInt("Time-Manager.Restarting", 5);
       arenaState = IArenaState.RESTARTING;

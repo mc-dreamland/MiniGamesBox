@@ -23,6 +23,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.IllegalPluginAccessException;
 import org.jetbrains.annotations.NotNull;
+import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.stats.IStatisticType;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.api.user.data.UserDatabase;
@@ -34,10 +35,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 
 /**
@@ -266,9 +264,15 @@ public class MysqlManager implements UserDatabase {
 
   @Override
   public void disable() {
-    for(Player player : plugin.getServer().getOnlinePlayers()) {
-      database.executeUpdate(getUpdateQuery(plugin.getUserManager().getUser(player)));
+    List<IPluginArena> arenas = plugin.getArenaRegistry().getArenas();
+    for(IPluginArena arena : arenas) {
+      for(Player player : arena.getPlayers()) {
+        database.executeUpdate(getUpdateQuery(plugin.getUserManager().getUser(player)));
+      }
     }
+//    for(Player player : plugin.getServer().getOnlinePlayers()) {
+//      database.executeUpdate(getUpdateQuery(plugin.getUserManager().getUser(player)));
+//    }
     database.shutdownConnPool();
   }
 
