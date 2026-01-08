@@ -90,6 +90,9 @@ public class Events implements Listener {
 
   @EventHandler
   public void onExplosionCancel(EntityExplodeEvent event) {
+    if (!plugin.getConfigPreferences().getOption("PROTECT_ARENA_ALL_BLOCKS")) {
+      return;
+    }
     for(IPluginArena arena : plugin.getArenaRegistry().getArenas()) {
       Location start = arena.getStartLocation();
       if(start.getWorld().getName().equals(event.getLocation().getWorld().getName())

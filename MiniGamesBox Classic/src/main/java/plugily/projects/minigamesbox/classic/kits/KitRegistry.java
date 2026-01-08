@@ -154,12 +154,12 @@ public class KitRegistry implements IKitRegistry {
       }
       case "level": {
         kit = new LevelKit(kitFileName, kit_name, kit_description, itemStack);
-        ((LevelKit) kit).setLevel(kitsConfig.getInt("required-level"));
+        ((LevelKit) kit).setLevel(kitsConfig.getInt("required_level"));
         break;
       }
       case "premium": {
         kit = new PremiumKit(kitFileName, kit_name, kit_description, itemStack);
-        ((PremiumKit)kit).setPermissionKey(kitsConfig.getString("permission-key"));
+        ((PremiumKit)kit).setPermissionKey(kitsConfig.getString("permission_key"));
         break;
       }
       default: {

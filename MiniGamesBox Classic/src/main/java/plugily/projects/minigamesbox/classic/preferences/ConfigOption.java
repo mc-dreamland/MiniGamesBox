@@ -82,6 +82,10 @@ public class ConfigOption implements IConfigOption {
 
     options.put("UPDATE_CHECKER", new ConfigOption("Update-Notifier.Stable", true, true));
     options.put("BETA_UPDATE_CHECKER", new ConfigOption("Update-Notifier.Beta", true, true));
+
+
+    options.put("PROTECT_ARENA_ALL_BLOCKS", new ConfigOption("protect.all-blocks", true, true));
+
   }
 
   private final String path;

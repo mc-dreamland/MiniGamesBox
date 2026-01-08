@@ -4,8 +4,7 @@ display_item:
 enabled: true
 unlockedOnDefault: false
 kit_type: level
-required-level: 2
-bow-cooldown: 3
+required_level: 2
 inventory:
   '0':
     item:
