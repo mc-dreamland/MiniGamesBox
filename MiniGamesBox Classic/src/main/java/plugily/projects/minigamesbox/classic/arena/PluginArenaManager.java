@@ -38,6 +38,10 @@ import plugily.projects.minigamesbox.classic.utils.misc.MiscUtils;
 import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 
 /**
@@ -47,7 +51,102 @@ import java.util.logging.Level;
  */
 public class PluginArenaManager {
 
+  public static class PlayerQuitData{
+
+    private final UUID uuid;
+    private final Long quitTime;
+
+      public PlayerQuitData(UUID uuid, Long quitTime) {
+          this.uuid = uuid;
+          this.quitTime = quitTime;
+      }
+
+    public Long getQuitTime() {
+      return quitTime;
+    }
+    public UUID getUuid() {
+      return uuid;
+    }
+  }
+
+
   private final PluginMain plugin;
+  private final Map<Integer,Map<UUID, PlayerQuitData>> playerQuitMap = new HashMap<>();
+
+  public void setRejoinTime(long rejoinTime) {
+    this.rejoinTime = rejoinTime;
+  }
+
+  private long rejoinTime = 5 * 60 * 1000L;
+
+  public Integer checkPlayerRejoinGetBungeeId(Player player) {
+    UUID uuid = player.getUniqueId();
+    long currentTime = System.currentTimeMillis();
+    for (Map.Entry<Integer, Map<UUID, PlayerQuitData>> entry : playerQuitMap.entrySet()) {
+      Integer bungeeId = entry.getKey();
+      Map<UUID, PlayerQuitData> arenaQuitMap = entry.getValue();
+
+      PlayerQuitData data = arenaQuitMap.get(uuid);
+      if (data != null) {
+        long quitTime = data.getQuitTime();
+        if (currentTime - quitTime < rejoinTime) {
+          return bungeeId;
+        }
+      }
+    }
+    return -1;
+  }
+
+  public int getBungeeRejoinSize( @NotNull IPluginArena arena,Player player) {
+    int bungeeId = plugin.getArenaRegistry().getBungeeId(arena.getId());
+    Map<UUID, PlayerQuitData> arenaQuitMap = playerQuitMap.get(bungeeId);
+
+    if (arenaQuitMap == null || arenaQuitMap.isEmpty()) {
+      return 0;
+    }
+
+    long currentTime = System.currentTimeMillis();
+    int count = 0;
+
+    for (PlayerQuitData data : arenaQuitMap.values()) {
+      if (currentTime - data.getQuitTime() < rejoinTime) {
+        if (player != null && player.getUniqueId().equals(data.getUuid())){
+          continue;
+        }
+        count++;
+      }
+    }
+    return count;
+  }
+
+
+  public void cleanExpiredPlayerData() {
+    long currentTime = System.currentTimeMillis();
+    Iterator<Map.Entry<Integer, Map<UUID, PlayerQuitData>>> outerIterator = playerQuitMap.entrySet().iterator();
+
+    while (outerIterator.hasNext()) {
+      Map.Entry<Integer, Map<UUID, PlayerQuitData>> outerEntry = outerIterator.next();
+      Map<UUID, PlayerQuitData> innerMap = outerEntry.getValue();
+      Iterator<Map.Entry<UUID, PlayerQuitData>> innerIterator = innerMap.entrySet().iterator();
+
+      while (innerIterator.hasNext()) {
+        Map.Entry<UUID, PlayerQuitData> innerEntry = innerIterator.next();
+        PlayerQuitData data = innerEntry.getValue();
+
+        if (currentTime - data.getQuitTime() > rejoinTime) {
+          innerIterator.remove();
+          plugin.getDebugger().debug("Removed expired player data for UUID: {0}", data.getUuid());
+        }
+      }
+
+      if (innerMap.isEmpty()) {
+        outerIterator.remove();
+        plugin.getDebugger().debug("Removed empty arena entry for Bungee ID: {0}", outerEntry.getKey());
+      }
+    }
+  }
+
+
 
   public PluginArenaManager(PluginMain plugin) {
     this.plugin = plugin;
@@ -76,7 +175,7 @@ public class PluginArenaManager {
 
     arena.getPlayers().add(player);
 
-    if(arena.getArenaState() == IArenaState.IN_GAME || ArenaState.isStartingStage(arena) && arena.getTimer() <= 3 || arena.getArenaState() == IArenaState.ENDING) {
+    if(arena.getArenaState() == IArenaState.IN_GAME || arena.getArenaState() == IArenaState.ENDING) {
       if(!plugin.getConfigPreferences().getOption("SPECTATORS")) {
         new MessageBuilder("IN_GAME_SPECTATOR_BLOCKED").asKey().player(player).arena(arena).sendPlayer();
         return;
@@ -163,11 +262,11 @@ public class PluginArenaManager {
   }
 
   private boolean checkFullGamePermission(Player player, IPluginArena arena) {
-    if(arena.getPlayers().size() + 1 <= arena.getMaximumPlayers()) {
+    if(arena.getPlayers().size() + getBungeeRejoinSize(arena, player) + 1 <= arena.getMaximumPlayers()) {
       return true;
     }
     if(!player.hasPermission(plugin.getPluginNamePrefixLong() + ".fullgames")) {
-      new MessageBuilder("IN_GAME_JOIN_FULL_GAME").asKey().player(player).arena(arena).sendPlayer();
+      player.kickPlayer(new MessageBuilder("IN_GAME_JOIN_FULL_GAME").asKey().player(player).arena(arena).build());
       return false;
     }
     for(Player arenaPlayer : arena.getPlayers()) {
@@ -181,7 +280,7 @@ public class PluginArenaManager {
       }
       return true;
     }
-    new MessageBuilder("IN_GAME_JOIN_NO_SLOTS_FOR_PREMIUM").asKey().player(player).arena(arena).sendPlayer();
+    player.kickPlayer(new MessageBuilder("IN_GAME_JOIN_NO_SLOTS_FOR_PREMIUM").asKey().player(player).arena(arena).build());
     return false;
   }
 
@@ -195,17 +294,6 @@ public class PluginArenaManager {
     Bukkit.getPluginManager().callEvent(event);
     if(event.isCancelled()) {
       new MessageBuilder("IN_GAME_JOIN_CANCEL_API").asKey().player(player).arena(arena).sendPlayer();
-      return false;
-    }
-    String perm = plugin.getPluginNamePrefixLong() + ".join.<arena>";
-    plugin.getDebugger().debug("[{0}] Initial perm is <{1}> of name <{2}>", arena.getId(), perm, plugin.getPluginNamePrefixLong());
-    if(!(player.hasPermission(perm.replace("<arena>", "*")) || player.hasPermission(perm.replace("<arena>", arena.getId())))) {
-      MessageBuilder denyMessage = new MessageBuilder("IN_GAME_JOIN_NO_PERMISSION").asKey().player(player).value(perm.replace("<arena>", arena.getId()));
-      if(plugin.getConfigPreferences().getOption("BUNGEEMODE")) {
-        ComplementAccessor.getComplement().kickPlayer(player, denyMessage.build());
-      } else {
-        denyMessage.sendPlayer();
-      }
       return false;
     }
 
@@ -237,7 +325,7 @@ public class PluginArenaManager {
     long start = System.currentTimeMillis();
 
     Bukkit.getPluginManager().callEvent(new PlugilyGameLeaveAttemptEvent(player, arena));
-
+    addPlayerQuitData(player,arena);
     IUser user = plugin.getUserManager().getUser(player);
 
     if(!user.isSpectator()) {
@@ -254,6 +342,14 @@ public class PluginArenaManager {
     }
     plugin.getSignManager().updateSigns();
     plugin.getDebugger().debug("[{0}] Final leave attempt for {1} took {2}ms", arena.getId(), player.getName(), System.currentTimeMillis() - start);
+  }
+
+  public void addPlayerQuitData(@NotNull Player player, @NotNull IPluginArena arena) {
+    if (arena.getArenaState()==IArenaState.IN_GAME) {
+      String arenaId = arena.getId();
+      int bungeeId = plugin.getArenaRegistry().getBungeeId(arenaId);
+      playerQuitMap.computeIfAbsent(bungeeId, k -> new HashMap<>()).put(player.getUniqueId(), new PlayerQuitData(player.getUniqueId(), System.currentTimeMillis()));
+    }
   }
 
   /**

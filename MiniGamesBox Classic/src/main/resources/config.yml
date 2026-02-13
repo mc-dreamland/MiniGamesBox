@@ -16,6 +16,7 @@
 #    Use filename of the language e.g. de_DE.yml -> locale: de_DE
 locale: default
 
+arenaAmount: 1
 
 # Should we display a boss bar with additional arena information?
 Bossbar:

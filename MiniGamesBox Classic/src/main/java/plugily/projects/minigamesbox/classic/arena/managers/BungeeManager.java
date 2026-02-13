@@ -37,6 +37,7 @@ import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAcc
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 /**
@@ -84,8 +85,16 @@ public class BungeeManager implements Listener {
       return;
     }
     IPluginArena arena = plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena());
-    event.setMaxPlayers(arena.getMaximumPlayers());
-    ComplementAccessor.getComplement().setMotd(event, new MessageBuilder(motd.get(arena.getArenaState())).arena(arena).build());
+    int bungeeRejoinSize = plugin.getArenaManager().getBungeeRejoinSize(arena, null);
+    int maxPlayers = arena.getMaximumPlayers();
+    int size = arena.getPlayers().size();
+
+    event.setMaxPlayers(maxPlayers);
+    if (size+bungeeRejoinSize>=maxPlayers){
+      ComplementAccessor.getComplement().setMotd(event, new MessageBuilder(motd.get(IArenaState.FULL_GAME)).arena(arena).build());
+    }else {
+      ComplementAccessor.getComplement().setMotd(event, new MessageBuilder(motd.get(arena.getArenaState())).arena(arena).build());
+    }
   }
 
 
@@ -93,17 +102,37 @@ public class BungeeManager implements Listener {
   public void onJoin(PlayerJoinEvent event) {
     ComplementAccessor.getComplement().setJoinMessage(event, "");
     if(!plugin.getArenaRegistry().getArenas().isEmpty()) {
-      plugin.getArenaManager().joinAttempt(event.getPlayer(), plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena()));
+      Player player = event.getPlayer();
+      plugin.getArenaManager().cleanExpiredPlayerData();
+      Integer bungeeId = plugin.getArenaManager().checkPlayerRejoinGetBungeeId(player);
+      if (bungeeId != -1){
+        IPluginArena arena = plugin.getArenaRegistry().getArenas().get(bungeeId);
+        if (arena != null){
+          Set<Player> players = arena.getPlayers();
+          int maximumPlayers = arena.getMaximumPlayers();
+          if (players.size() +1 <= maximumPlayers){
+            plugin.getArenaManager().joinAttempt(player, arena);
+            return;
+          }
+        }
+      }
+      int bungeeArena = plugin.getArenaRegistry().getBungeeArena();
+      IPluginArena arena = plugin.getArenaRegistry().getArenas().get(bungeeArena);
+      plugin.getArenaManager().joinAttempt(player, arena);
     }
+    plugin.getArenaRegistry().shuffleBungeeArena();
   }
 
   @EventHandler(priority = EventPriority.HIGHEST)
   public void onQuit(PlayerQuitEvent event) {
     ComplementAccessor.getComplement().setQuitMessage(event, "");
     if(!plugin.getArenaRegistry().getArenas().isEmpty() && plugin.getArenaRegistry().isInArena(event.getPlayer())) {
-      plugin.getArenaManager().leaveAttempt(event.getPlayer(), plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena()));
+      plugin.getArenaManager().cleanExpiredPlayerData();
+      int bungeeArena = plugin.getArenaRegistry().getBungeeArena();
+      IPluginArena arena = plugin.getArenaRegistry().getArenas().get(bungeeArena);
+      plugin.getArenaManager().leaveAttempt(event.getPlayer(), arena);
     }
-
+    plugin.getArenaRegistry().shuffleBungeeArena();
   }
 
 }

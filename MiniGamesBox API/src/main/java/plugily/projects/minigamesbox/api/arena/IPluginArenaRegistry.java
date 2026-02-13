@@ -56,4 +56,10 @@ public interface IPluginArenaRegistry {
   void shuffleBungeeArena();
 
   int getBungeeArena();
+
+  void addBungeeArenaMapping(int bungeeId, String arenaId);
+
+  String getArenaId(int bungeeId);
+
+  int getBungeeId(String arenaId);
 }

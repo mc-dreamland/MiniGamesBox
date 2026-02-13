@@ -32,9 +32,7 @@ import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.configuration.ConfigUtils;
 import plugily.projects.minigamesbox.classic.utils.serialization.LocationSerializer;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -46,10 +44,51 @@ import java.util.stream.Collectors;
  */
 public class PluginArenaRegistry implements IPluginArenaRegistry {
 
+  private static class BungeeArenaMapping {
+    private final Map<Integer, String> bungeeToArena = new HashMap<>();
+    private final Map<String, Integer> arenaToBungee = new HashMap<>();
+
+    public void put(int bungeeId, String arenaId) {
+      bungeeToArena.put(bungeeId, arenaId);
+      arenaToBungee.put(arenaId, bungeeId);
+    }
+    public String getArenaId(int bungeeId) {
+      return bungeeToArena.get(bungeeId);
+    }
+    public Integer getBungeeId(@NotNull String arenaId) {
+      return arenaToBungee.get(arenaId);
+    }
+    public boolean containsBungeeId(int bungeeId) {
+      return bungeeToArena.containsKey(bungeeId);
+    }
+
+    public boolean containsArenaId(@NotNull String arenaId) {
+      return arenaToBungee.containsKey(arenaId);
+    }
+    public void removeByBungeeId(int bungeeId) {
+      String arenaId = bungeeToArena.remove(bungeeId);
+      if (arenaId != null) {
+        arenaToBungee.remove(arenaId);
+      }
+    }
+    public void removeByArenaId(@NotNull String arenaId) {
+      Integer bungeeId = arenaToBungee.remove(arenaId);
+      if (bungeeId != null) {
+        bungeeToArena.remove(bungeeId);
+      }
+    }
+    public void clear() {
+      bungeeToArena.clear();
+      arenaToBungee.clear();
+    }
+  }
+
+
   private final List<IPluginArena> arenas = new ArrayList<>();
   private final PluginMain plugin;
   private final List<World> arenaIngameWorlds = new ArrayList<>();
   private final List<World> arenaWorlds = new ArrayList<>();
+  private final BungeeArenaMapping bungeeArenaMapping = new BungeeArenaMapping();
 
   private int bungeeArena = -999;
 
@@ -167,12 +206,28 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
       plugin.getDebugger().sendConsoleMsg(new MessageBuilder("VALIDATOR_NO_INSTANCES_CREATED").asKey().build());
       return;
     }
-    for(String id : section.getKeys(false)) {
-      if(id.equalsIgnoreCase("default")) {
+    int amount = ConfigUtils.getConfig(plugin, "config").getInt("arenaAmount",1);
+    int count = 0;
+    Set<String> keys = section.getKeys(false);
+    ArrayList<String> list = new ArrayList<>(keys);
+    Collections.shuffle(list);
+    for (String key : list) {
+      if (count>=amount){
+        return;
+      }
+      if(key.equalsIgnoreCase("default")) {
         continue;
       }
-      registerArena(id);
+      registerArena(key);
+      bungeeArenaMapping.put(count, key);
+      count++;
     }
+//    for(String id : section.getKeys(false)) {
+//      if(id.equalsIgnoreCase("default")) {
+//        continue;
+//      }
+//      registerArena(id);
+//    }
     plugin.getDebugger().debug("[ArenaRegistry] Arenas registration completed took {0}ms", System.currentTimeMillis() - start);
   }
 
@@ -272,9 +327,26 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
 
   @Override
   public void shuffleBungeeArena() {
-    if(!arenas.isEmpty()) {
-      bungeeArena = ThreadLocalRandom.current().nextInt(arenas.size());
-    }
+      if(!arenas.isEmpty()) {
+          if (bungeeArena != -999 ){
+              IPluginArena iPluginArena = plugin.getArenaRegistry().getArenas().get(bungeeArena);
+              int size = iPluginArena.getPlayers().size();
+              int maximumPlayers1 = iPluginArena.getMaximumPlayers();
+              if (size < maximumPlayers1) {
+                  return;
+              }
+          }
+          int num = 0;
+          for (IPluginArena arena : plugin.getArenaRegistry().getArenas()) {
+            Set<Player> players = arena.getPlayers();
+            int maximumPlayers = arena.getMaximumPlayers();
+            if (players.size() < maximumPlayers ){
+              bungeeArena =num;
+              break;
+            }
+            num++;
+          }
+      }
   }
 
   @Override
@@ -283,5 +355,20 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
       bungeeArena = ThreadLocalRandom.current().nextInt(arenas.size());
     }
     return bungeeArena;
+  }
+
+  @Override
+  public void addBungeeArenaMapping(int bungeeId, String arenaId) {
+    bungeeArenaMapping.put(bungeeId, arenaId);
+  }
+
+  @Override
+  public String getArenaId(int bungeeId) {
+    return bungeeArenaMapping.getArenaId(bungeeId);
+  }
+
+  @Override
+  public int getBungeeId(String arenaId) {
+    return bungeeArenaMapping.getBungeeId(arenaId);
   }
 }
