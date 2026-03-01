@@ -25,6 +25,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.arena.IPluginArenaRegistry;
 import plugily.projects.minigamesbox.classic.PluginMain;
@@ -328,23 +329,17 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
   @Override
   public void shuffleBungeeArena() {
       if(!arenas.isEmpty()) {
-          if (bungeeArena != -999 ){
-              IPluginArena iPluginArena = plugin.getArenaRegistry().getArenas().get(bungeeArena);
-              int size = iPluginArena.getPlayers().size();
-              int maximumPlayers1 = iPluginArena.getMaximumPlayers();
-              if (size < maximumPlayers1) {
-                  return;
+          if (bungeeArena != -999){
+            List<IPluginArena> pluginArenas = plugin.getArenaRegistry().getArenas();
+            IPluginArena iPluginArena = pluginArenas.get(bungeeArena);
+              if (iPluginArena.getArenaState() != IArenaState.WAITING_FOR_PLAYERS && iPluginArena.getArenaState() != IArenaState.STARTING && iPluginArena.getPlayers().size() >= iPluginArena.getMaximumPlayers()) {
+                for (int i = 0; i < pluginArenas.size(); i++) {
+                  IPluginArena arena = pluginArenas.get(i);
+                  if ((arena.getArenaState() == IArenaState.WAITING_FOR_PLAYERS || arena.getArenaState() == IArenaState.STARTING) && arena.getPlayers().size() < arena.getMaximumPlayers()){
+                    bungeeArena = i;
+                  }
+                }
               }
-          }
-          int num = 0;
-          for (IPluginArena arena : plugin.getArenaRegistry().getArenas()) {
-            Set<Player> players = arena.getPlayers();
-            int maximumPlayers = arena.getMaximumPlayers();
-            if (players.size() < maximumPlayers ){
-              bungeeArena =num;
-              break;
-            }
-            num++;
           }
       }
   }
