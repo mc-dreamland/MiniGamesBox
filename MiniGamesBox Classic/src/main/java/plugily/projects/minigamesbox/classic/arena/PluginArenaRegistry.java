@@ -332,7 +332,7 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
           if (bungeeArena != -999){
             List<IPluginArena> pluginArenas = plugin.getArenaRegistry().getArenas();
             IPluginArena iPluginArena = pluginArenas.get(bungeeArena);
-              if (iPluginArena.getArenaState() != IArenaState.WAITING_FOR_PLAYERS && iPluginArena.getArenaState() != IArenaState.STARTING && iPluginArena.getPlayers().size() >= iPluginArena.getMaximumPlayers()) {
+              if ((iPluginArena.getArenaState() != IArenaState.WAITING_FOR_PLAYERS && iPluginArena.getArenaState() != IArenaState.STARTING) || iPluginArena.getPlayers().size() >= iPluginArena.getMaximumPlayers()) {
                 for (int i = 0; i < pluginArenas.size(); i++) {
                   IPluginArena arena = pluginArenas.get(i);
                   if ((arena.getArenaState() == IArenaState.WAITING_FOR_PLAYERS || arena.getArenaState() == IArenaState.STARTING) && arena.getPlayers().size() < arena.getMaximumPlayers()){
