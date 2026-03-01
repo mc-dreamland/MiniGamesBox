@@ -85,7 +85,7 @@ public class MaterialUtils {
       add(getMaterial("WOOD_DOOR"));
       add(getMaterial("WARPED_DOOR"));
       add(getMaterial("CRIMSON_DOOR"));
-      add(getMaterial("BIRCH_DOOR"));
+//      add(getMaterial("BIRCH_DOOR"));
       add(getMaterial("CHERRY_DOOR"));
       add(getMaterial("COPPER_DOOR"));
       add(getMaterial("EXPOSED_COPPER_DOOR"));
@@ -98,6 +98,7 @@ public class MaterialUtils {
       add(getMaterial("WAXED_EXPOSED_COPPER_DOOR"));
       add(getMaterial("WAXED_COPPER_DOOR"));
       add(getMaterial("WARPED_DOOR"));
+      add(getMaterial("BAMBOO_DOOR"));
     }
   };
 
