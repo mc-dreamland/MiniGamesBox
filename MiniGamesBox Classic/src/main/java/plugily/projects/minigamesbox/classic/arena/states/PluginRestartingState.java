@@ -68,7 +68,7 @@ public class PluginRestartingState implements ArenaStateHandler {
             plugin.getUserManager().saveAllStatistic(user);
             plugin.getUserManager().removeUser(user);
           }
-//          plugin.getServer().shutdown();
+          plugin.getServer().shutdown();
         } else {
           plugin.getArenaRegistry().shuffleBungeeArena();
           for(Player player : Bukkit.getOnlinePlayers()) {
