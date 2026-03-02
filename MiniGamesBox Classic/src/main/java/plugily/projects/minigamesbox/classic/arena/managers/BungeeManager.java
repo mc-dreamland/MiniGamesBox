@@ -101,9 +101,9 @@ public class BungeeManager implements Listener {
     ComplementAccessor.getComplement().setJoinMessage(event, "");
     if(!plugin.getArenaRegistry().getArenas().isEmpty()) {
       Player player = event.getPlayer();
-      int rejoinArenaId = plugin.getArenaManager().getRejoinArenaId(player);
+      int rejoinArenaId = isRejoinEnabled() ? plugin.getArenaManager().getRejoinArenaId(player) : -1;
       IPluginArena arena;
-      if (isRejoinEnabled() && plugin.getArenaManager().getRejoinArenaId(player) == -1){
+      if (plugin.getArenaManager().getRejoinArenaId(player) == -1){
         int bungeeArena = plugin.getArenaRegistry().getBungeeArena();
         arena = plugin.getArenaRegistry().getArenas().get(bungeeArena);
       } else {
