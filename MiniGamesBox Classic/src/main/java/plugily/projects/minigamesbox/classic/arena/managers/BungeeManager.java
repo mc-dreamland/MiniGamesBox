@@ -103,7 +103,7 @@ public class BungeeManager implements Listener {
       Player player = event.getPlayer();
       int rejoinArenaId = plugin.getArenaManager().getRejoinArenaId(player);
       IPluginArena arena;
-      if (plugin.getArenaManager().getRejoinArenaId(player) == -1){
+      if (isRejoinEnabled() && plugin.getArenaManager().getRejoinArenaId(player) == -1){
         int bungeeArena = plugin.getArenaRegistry().getBungeeArena();
         arena = plugin.getArenaRegistry().getArenas().get(bungeeArena);
       } else {
@@ -123,6 +123,10 @@ public class BungeeManager implements Listener {
       plugin.getArenaManager().leaveAttempt(event.getPlayer(), arena);
     }
     plugin.getArenaRegistry().shuffleBungeeArena();
+  }
+
+  public boolean isRejoinEnabled(){
+    return config.getBoolean("Rejoin.Enabled");
   }
 
 }

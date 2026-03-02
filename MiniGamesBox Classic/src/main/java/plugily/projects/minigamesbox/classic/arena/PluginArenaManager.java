@@ -260,7 +260,9 @@ public class PluginArenaManager {
     long start = System.currentTimeMillis();
 
     Bukkit.getPluginManager().callEvent(new PlugilyGameLeaveAttemptEvent(player, arena));
-    addPlayerQuitData(player,arena);
+    if (plugin.getBungeeManager().isRejoinEnabled()){
+      addPlayerQuitData(player,arena);
+    }
     IUser user = plugin.getUserManager().getUser(player);
 
     if(!user.isSpectator()) {
