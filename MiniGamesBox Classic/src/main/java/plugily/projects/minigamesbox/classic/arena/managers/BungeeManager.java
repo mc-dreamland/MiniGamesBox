@@ -85,12 +85,10 @@ public class BungeeManager implements Listener {
       return;
     }
     IPluginArena arena = plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena());
-    int bungeeRejoinSize = plugin.getArenaManager().getBungeeRejoinSize(arena, null);
+    int reservedSize = plugin.getArenaManager().getReservedSize(arena);
     int maxPlayers = arena.getMaximumPlayers();
     int size = arena.getPlayers().size();
-
-    event.setMaxPlayers(maxPlayers);
-    if (size+bungeeRejoinSize>=maxPlayers){
+    if (size + reservedSize >= maxPlayers){
       ComplementAccessor.getComplement().setMotd(event, new MessageBuilder(motd.get(IArenaState.FULL_GAME)).arena(arena).build());
     }else {
       ComplementAccessor.getComplement().setMotd(event, new MessageBuilder(motd.get(arena.getArenaState())).arena(arena).build());
@@ -103,21 +101,14 @@ public class BungeeManager implements Listener {
     ComplementAccessor.getComplement().setJoinMessage(event, "");
     if(!plugin.getArenaRegistry().getArenas().isEmpty()) {
       Player player = event.getPlayer();
-      plugin.getArenaManager().cleanExpiredPlayerData();
-      Integer bungeeId = plugin.getArenaManager().checkPlayerRejoinGetBungeeId(player);
-      if (bungeeId != -1){
-        IPluginArena arena = plugin.getArenaRegistry().getArenas().get(bungeeId);
-        if (arena != null){
-          Set<Player> players = arena.getPlayers();
-          int maximumPlayers = arena.getMaximumPlayers();
-          if (players.size() +1 <= maximumPlayers){
-            plugin.getArenaManager().joinAttempt(player, arena);
-            return;
-          }
-        }
+      int rejoinArenaId = plugin.getArenaManager().getRejoinArenaId(player);
+      IPluginArena arena;
+      if (plugin.getArenaManager().getRejoinArenaId(player) == -1){
+        int bungeeArena = plugin.getArenaRegistry().getBungeeArena();
+        arena = plugin.getArenaRegistry().getArenas().get(bungeeArena);
+      } else {
+        arena = plugin.getArenaRegistry().getArenas().get(rejoinArenaId);
       }
-      int bungeeArena = plugin.getArenaRegistry().getBungeeArena();
-      IPluginArena arena = plugin.getArenaRegistry().getArenas().get(bungeeArena);
       plugin.getArenaManager().joinAttempt(player, arena);
     }
     plugin.getArenaRegistry().shuffleBungeeArena();
@@ -127,7 +118,6 @@ public class BungeeManager implements Listener {
   public void onQuit(PlayerQuitEvent event) {
     ComplementAccessor.getComplement().setQuitMessage(event, "");
     if(!plugin.getArenaRegistry().getArenas().isEmpty() && plugin.getArenaRegistry().isInArena(event.getPlayer())) {
-      plugin.getArenaManager().cleanExpiredPlayerData();
       int bungeeArena = plugin.getArenaRegistry().getBungeeArena();
       IPluginArena arena = plugin.getArenaRegistry().getArenas().get(bungeeArena);
       plugin.getArenaManager().leaveAttempt(event.getPlayer(), arena);

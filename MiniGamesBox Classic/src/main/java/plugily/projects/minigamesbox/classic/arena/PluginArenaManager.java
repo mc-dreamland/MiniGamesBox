@@ -18,6 +18,8 @@
 
 package plugily.projects.minigamesbox.classic.arena;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -38,10 +40,9 @@ import plugily.projects.minigamesbox.classic.utils.misc.MiscUtils;
 import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 /**
@@ -51,102 +52,36 @@ import java.util.logging.Level;
  */
 public class PluginArenaManager {
 
-  public static class PlayerQuitData{
-
-    private final UUID uuid;
-    private final Long quitTime;
-
-      public PlayerQuitData(UUID uuid, Long quitTime) {
-          this.uuid = uuid;
-          this.quitTime = quitTime;
-      }
-
-    public Long getQuitTime() {
-      return quitTime;
-    }
-    public UUID getUuid() {
-      return uuid;
-    }
-  }
-
-
   private final PluginMain plugin;
-  private final Map<Integer,Map<UUID, PlayerQuitData>> playerQuitMap = new HashMap<>();
 
-  public void setRejoinTime(long rejoinTime) {
-    this.rejoinTime = rejoinTime;
+  private final Cache<UUID, Integer> rejoinCache = CacheBuilder.newBuilder()
+      .expireAfterWrite(5, TimeUnit.MINUTES)
+      .build();
+
+  private final Cache<Integer, AtomicInteger> reservedSizes = CacheBuilder.newBuilder()
+          .expireAfterWrite(5, TimeUnit.MINUTES)
+          .build();
+
+  public boolean canRejoin(Player player){
+    return rejoinCache.getIfPresent(player.getUniqueId()) != null;
   }
 
-  private long rejoinTime = 5 * 60 * 1000L;
-
-  public Integer checkPlayerRejoinGetBungeeId(Player player) {
-    UUID uuid = player.getUniqueId();
-    long currentTime = System.currentTimeMillis();
-    for (Map.Entry<Integer, Map<UUID, PlayerQuitData>> entry : playerQuitMap.entrySet()) {
-      Integer bungeeId = entry.getKey();
-      Map<UUID, PlayerQuitData> arenaQuitMap = entry.getValue();
-
-      PlayerQuitData data = arenaQuitMap.get(uuid);
-      if (data != null) {
-        long quitTime = data.getQuitTime();
-        if (currentTime - quitTime < rejoinTime) {
-          return bungeeId;
-        }
-      }
+  public int getRejoinArenaId(Player player){
+    Integer arenaId = rejoinCache.getIfPresent(player.getUniqueId());
+    if (arenaId != null){
+      return arenaId;
     }
     return -1;
   }
 
-  public int getBungeeRejoinSize( @NotNull IPluginArena arena,Player player) {
+  public int getReservedSize(@NotNull IPluginArena arena){
     int bungeeId = plugin.getArenaRegistry().getBungeeId(arena.getId());
-    Map<UUID, PlayerQuitData> arenaQuitMap = playerQuitMap.get(bungeeId);
-
-    if (arenaQuitMap == null || arenaQuitMap.isEmpty()) {
-      return 0;
+    AtomicInteger reserved = reservedSizes.getIfPresent(bungeeId);
+    if (reserved != null){
+      return reserved.get();
     }
-
-    long currentTime = System.currentTimeMillis();
-    int count = 0;
-
-    for (PlayerQuitData data : arenaQuitMap.values()) {
-      if (currentTime - data.getQuitTime() < rejoinTime) {
-        if (player != null && player.getUniqueId().equals(data.getUuid())){
-          continue;
-        }
-        count++;
-      }
-    }
-    return count;
+    return 0;
   }
-
-
-  public void cleanExpiredPlayerData() {
-    long currentTime = System.currentTimeMillis();
-    Iterator<Map.Entry<Integer, Map<UUID, PlayerQuitData>>> outerIterator = playerQuitMap.entrySet().iterator();
-
-    while (outerIterator.hasNext()) {
-      Map.Entry<Integer, Map<UUID, PlayerQuitData>> outerEntry = outerIterator.next();
-      Map<UUID, PlayerQuitData> innerMap = outerEntry.getValue();
-      Iterator<Map.Entry<UUID, PlayerQuitData>> innerIterator = innerMap.entrySet().iterator();
-
-      while (innerIterator.hasNext()) {
-        Map.Entry<UUID, PlayerQuitData> innerEntry = innerIterator.next();
-        PlayerQuitData data = innerEntry.getValue();
-
-        if (currentTime - data.getQuitTime() > rejoinTime) {
-          innerIterator.remove();
-          plugin.getDebugger().debug("Removed expired player data for UUID: {0}", data.getUuid());
-        }
-      }
-
-      if (innerMap.isEmpty()) {
-        outerIterator.remove();
-        plugin.getDebugger().debug("Removed empty arena entry for Bungee ID: {0}", outerEntry.getKey());
-      }
-    }
-  }
-
-
 
   public PluginArenaManager(PluginMain plugin) {
     this.plugin = plugin;
@@ -262,7 +197,7 @@ public class PluginArenaManager {
   }
 
   private boolean checkFullGamePermission(Player player, IPluginArena arena) {
-    if(arena.getPlayers().size() + getBungeeRejoinSize(arena, player) + 1 <= arena.getMaximumPlayers()) {
+    if(arena.getPlayers().size() + getReservedSize(arena) + 1 <= arena.getMaximumPlayers()) {
       return true;
     }
     if(!player.hasPermission(plugin.getPluginNamePrefixLong() + ".fullgames")) {
@@ -345,10 +280,12 @@ public class PluginArenaManager {
   }
 
   public void addPlayerQuitData(@NotNull Player player, @NotNull IPluginArena arena) {
-    if (arena.getArenaState()==IArenaState.IN_GAME) {
-      String arenaId = arena.getId();
-      int bungeeId = plugin.getArenaRegistry().getBungeeId(arenaId);
-      playerQuitMap.computeIfAbsent(bungeeId, k -> new HashMap<>()).put(player.getUniqueId(), new PlayerQuitData(player.getUniqueId(), System.currentTimeMillis()));
+    if (arena.getArenaState() == IArenaState.IN_GAME) {
+      int bungeeId = plugin.getArenaRegistry().getBungeeId(arena.getId());
+      rejoinCache.put(player.getUniqueId(), bungeeId);
+      try {
+        reservedSizes.get(bungeeId, AtomicInteger::new).incrementAndGet();
+      } catch (Exception ignored){}
     }
   }
 

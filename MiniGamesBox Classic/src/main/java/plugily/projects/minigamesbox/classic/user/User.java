@@ -180,8 +180,7 @@ public class User implements IUser {
 
   @Override
   public double getCooldown(String key) {
-    double cooldown = cooldowns.getOrDefault(key, 0L);
-    return cooldown <= System.currentTimeMillis() ? 0 : cooldown - System.currentTimeMillis();
+    return Math.max(cooldowns.getOrDefault(key, 0L) - System.currentTimeMillis(), 0) * 0.001;
   }
 
   @Override
