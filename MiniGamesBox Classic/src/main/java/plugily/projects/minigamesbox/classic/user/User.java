@@ -28,6 +28,7 @@ import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -178,9 +179,18 @@ public class User implements IUser {
     cooldowns.put(key, milliseconds + System.currentTimeMillis());
   }
 
+  public void setCooldown(String key, Duration duration) {
+    setCooldown(key, duration.toMillis());
+  }
+
   @Override
-  public double getCooldown(String key) {
-    return Math.max(cooldowns.getOrDefault(key, 0L) - System.currentTimeMillis(), 0) * 0.001;
+  public long getCooldown(String key) {
+    return Math.max(cooldowns.getOrDefault(key, 0L) - System.currentTimeMillis(), 0);
+  }
+
+  @Override
+  public Duration getCooldownDuration(String key) {
+    return Duration.ofMillis(getCooldown(key));
   }
 
   @Override

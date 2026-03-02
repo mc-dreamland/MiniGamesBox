@@ -5,6 +5,7 @@ import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.kit.IKit;
 import plugily.projects.minigamesbox.api.stats.IStatisticType;
 
+import java.time.Duration;
 import java.util.UUID;
 
 /**
@@ -46,9 +47,13 @@ public interface IUser {
 
   boolean checkCanCastCooldownAndMessage(String cooldown);
 
-  void setCooldown(String key, long seconds);
+  void setCooldown(String key, long milliseconds);
 
-  double getCooldown(String key);
+  void setCooldown(String key, Duration duration);
+
+  long getCooldown(String key);
+
+  Duration getCooldownDuration(String key);
 
   boolean isInitialized();
 
