@@ -61,8 +61,8 @@ public class QuitEvent implements Listener {
       plugin.getUserManager().storeUserQuitDuringGame(player, arena);
       IUser user = plugin.getUserManager().getUser(player);
       plugin.getUserManager().saveAllStatistic(user);
-      plugin.getUserManager().removeUser(user);
       plugin.getArenaManager().leaveAttempt(player, arena);
+      plugin.getUserManager().removeUser(user);
 
       plugin.getArgumentsRegistry().getSpyChat().disableSpyChat(player);
     }
