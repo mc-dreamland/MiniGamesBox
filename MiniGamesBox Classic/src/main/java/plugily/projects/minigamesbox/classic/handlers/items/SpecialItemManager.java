@@ -109,7 +109,12 @@ public class SpecialItemManager {
     int slot = config.getInt(path + ".slot", -1);
     boolean force = config.getBoolean(path + ".force", true);
     boolean move = config.getBoolean(path + ".move", false);
-    specialItems.put(key, new SpecialItem(path, permission, itemStack, slot, stage, rewards, force, move));
+
+    SpecialItem value = new SpecialItem(path, permission, itemStack, slot, stage, rewards, force, move);
+    String displayName = ComplementAccessor.getComplement().getDisplayName(itemStack.getItemMeta());
+    value.setCacheDisplayName(displayName);
+    specialItems.put(key, value);
+
     plugin.getDebugger().debug("Loaded SpecialItem with key {0}, permissions {1}, itemstack {2}, slot {3}, stage {4} and reward {5}", key, permission, itemStack, slot, stage, rewards.stream().map(Reward::getExecutableCode).collect(Collectors.toList()));
   }
 
@@ -215,12 +220,16 @@ public class SpecialItemManager {
 
   @NotNull
   public SpecialItem getRelatedSpecialItem(ItemStack itemStack) {
+    if (itemStack == null || !itemStack.hasItemMeta()) {
+      return INVALID_ITEM;
+    }
+    String clickedName = ComplementAccessor.getComplement().getDisplayName(itemStack.getItemMeta());
     for(SpecialItem item : specialItems.values()) {
       if(item.getItemStack().isSimilar(itemStack)) {
         return item;
       }
       //After server restart items aren't similar on some mc versions as it formats the color codes in a different way, e.g. 1.18
-      if(ComplementAccessor.getComplement().getDisplayName(itemStack.getItemMeta()).equalsIgnoreCase(ComplementAccessor.getComplement().getDisplayName(item.getItemStack().getItemMeta()))) {
+      if(clickedName.equalsIgnoreCase(item.getCacheDisplayName())) {
         return item;
       }
     }

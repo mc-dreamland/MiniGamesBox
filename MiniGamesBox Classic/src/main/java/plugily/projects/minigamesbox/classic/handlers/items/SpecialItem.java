@@ -19,6 +19,8 @@
 package plugily.projects.minigamesbox.classic.handlers.items;
 
 import com.cryptomorin.xseries.XMaterial;
+import lombok.Data;
+import lombok.experimental.Accessors;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -37,6 +39,8 @@ import java.util.Set;
  * <p>
  * Created at 05.10.2021
  */
+@Data
+@Accessors(chain = true)
 public class SpecialItem {
 
   private static final Map<String, SpecialItem> specialItems = new HashMap<>();
@@ -56,6 +60,7 @@ public class SpecialItem {
   private final String path;
   private final String permission;
   private final ItemStack itemStack;
+  private  String cacheDisplayName;
   private int slot;
   private final SpecialItem.DisplayStage displayStage;
   private final boolean protectedOption;
