@@ -85,7 +85,7 @@ public class BungeeManager implements Listener {
       return;
     }
     IPluginArena arena = plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena());
-    int reservedSize = plugin.getArenaManager().getReservedSize(arena);
+    int reservedSize = plugin.getArenaManager().getReservedSize(arena,null);
     int maxPlayers = arena.getMaximumPlayers();
     int size = arena.getPlayers().size();
     if (size + reservedSize >= maxPlayers){
@@ -110,6 +110,8 @@ public class BungeeManager implements Listener {
         arena = plugin.getArenaRegistry().getArenas().get(rejoinArenaId);
       }
       plugin.getArenaManager().joinAttempt(player, arena);
+
+      plugin.getArenaManager().removeRejoinCache(player);
     }
     plugin.getArenaRegistry().shuffleBungeeArena();
   }

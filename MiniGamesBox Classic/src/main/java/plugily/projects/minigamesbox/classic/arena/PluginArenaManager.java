@@ -24,6 +24,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.events.game.PlugilyGameJoinAttemptEvent;
@@ -58,12 +59,8 @@ public class PluginArenaManager {
       .expireAfterWrite(5, TimeUnit.MINUTES)
       .build();
 
-  private final Cache<Integer, AtomicInteger> reservedSizes = CacheBuilder.newBuilder()
-          .expireAfterWrite(5, TimeUnit.MINUTES)
-          .build();
-
-  public boolean canRejoin(Player player){
-    return rejoinCache.getIfPresent(player.getUniqueId()) != null;
+  public void removeRejoinCache(Player player) {
+    rejoinCache.invalidate(player.getUniqueId());
   }
 
   public int getRejoinArenaId(Player player){
@@ -74,13 +71,16 @@ public class PluginArenaManager {
     return -1;
   }
 
-  public int getReservedSize(@NotNull IPluginArena arena){
-    int bungeeId = plugin.getArenaRegistry().getBungeeId(arena.getId());
-    AtomicInteger reserved = reservedSizes.getIfPresent(bungeeId);
-    if (reserved != null){
-      return reserved.get();
-    }
-    return 0;
+  public int getReservedSize(IPluginArena arena,Player player) {
+    int targetBungeeId = plugin.getArenaRegistry().getBungeeId(arena.getId());
+
+    return (int) rejoinCache.asMap().entrySet().stream()
+            .filter(entry -> {
+              if (player == null) return true;
+              return !entry.getKey().equals(player.getUniqueId());
+            })
+            .filter(entry -> entry.getValue() == targetBungeeId)
+            .count();
   }
 
   public PluginArenaManager(PluginMain plugin) {
@@ -197,7 +197,7 @@ public class PluginArenaManager {
   }
 
   private boolean checkFullGamePermission(Player player, IPluginArena arena) {
-    if(arena.getPlayers().size() + getReservedSize(arena) + 1 <= arena.getMaximumPlayers()) {
+    if(arena.getPlayers().size() + getReservedSize(arena,player) + 1 <= arena.getMaximumPlayers()) {
       return true;
     }
     if(!player.hasPermission(plugin.getPluginNamePrefixLong() + ".fullgames")) {
@@ -285,9 +285,6 @@ public class PluginArenaManager {
     if (arena.getArenaState() == IArenaState.IN_GAME) {
       int bungeeId = plugin.getArenaRegistry().getBungeeId(arena.getId());
       rejoinCache.put(player.getUniqueId(), bungeeId);
-      try {
-        reservedSizes.get(bungeeId, AtomicInteger::new).incrementAndGet();
-      } catch (Exception ignored){}
     }
   }
 
