@@ -337,6 +337,7 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
                   IPluginArena arena = pluginArenas.get(i);
                   if ((arena.getArenaState() == IArenaState.WAITING_FOR_PLAYERS || arena.getArenaState() == IArenaState.STARTING) && arena.getPlayers().size() < arena.getMaximumPlayers()){
                     bungeeArena = i;
+                    break;
                   }
                 }
               }

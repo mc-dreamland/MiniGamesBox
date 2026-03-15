@@ -124,6 +124,9 @@ public class PluginStartingState implements ArenaStateHandler {
       arenaTimer = plugin.getConfig().getInt("Time-Manager.In-Game", 270);
       plugin.getDebugger().performance("ArenaUpdate", "Arena {0} current timer set to {1}", arena.getId(), arenaTimer);
       IArenaState = IArenaState.IN_GAME;
+      plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, () -> {
+        plugin.getArenaRegistry().shuffleBungeeArena();
+      },1);
     }
     SoundHelper.playArenaCountdown(arena);
 

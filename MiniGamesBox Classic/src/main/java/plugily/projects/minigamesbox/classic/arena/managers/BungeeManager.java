@@ -20,6 +20,7 @@ package plugily.projects.minigamesbox.classic.arena.managers;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -82,6 +83,10 @@ public class BungeeManager implements Listener {
       return;
     }
     if(plugin.getArenaRegistry().getArenas().isEmpty() || !config.getBoolean("MOTD.Manager")) {
+      return;
+    }
+    if (Bukkit.hasWhitelist()) {
+      ComplementAccessor.getComplement().setMotd(event,new MessageBuilder(motd.get(IArenaState.RESTARTING)).build());
       return;
     }
     IPluginArena arena = plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena());
