@@ -131,4 +131,8 @@ public class BungeeManager implements Listener {
     return config.getBoolean("Rejoin.Enabled");
   }
 
+  public int getRejoinTime(){
+    return config.getInt("Rejoin.Time",5*60);
+  }
+
 }

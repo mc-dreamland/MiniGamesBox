@@ -55,9 +55,7 @@ public class PluginArenaManager {
 
   private final PluginMain plugin;
 
-  private final Cache<UUID, Integer> rejoinCache = CacheBuilder.newBuilder()
-      .expireAfterWrite(5, TimeUnit.MINUTES)
-      .build();
+  private final Cache<UUID, Integer> rejoinCache;
 
   public void removeRejoinCache(Player player) {
     rejoinCache.invalidate(player.getUniqueId());
@@ -85,6 +83,9 @@ public class PluginArenaManager {
 
   public PluginArenaManager(PluginMain plugin) {
     this.plugin = plugin;
+    rejoinCache = CacheBuilder.newBuilder()
+            .expireAfterWrite(plugin.getBungeeManager().getRejoinTime(), TimeUnit.SECONDS)
+            .build();
   }
 
   /**
