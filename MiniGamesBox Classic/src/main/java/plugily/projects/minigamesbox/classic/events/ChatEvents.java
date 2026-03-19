@@ -1,33 +1,19 @@
-/*
- *  MiniGamesBox - Library box with massive content that could be seen as minigames core.
- *  Copyright (C) 2023 Plugily Projects - maintained by Tigerpanzer_02 and contributors
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package plugily.projects.minigamesbox.classic.events;
 
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.PluginMain;
+import plugily.projects.minigamesbox.classic.handlers.chat.ChatManager;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 
-import java.util.ArrayList;
 
 /**
  * @author Tigerpanzer_02
@@ -35,71 +21,75 @@ import java.util.ArrayList;
  */
 public class ChatEvents implements Listener {
 
-  private final PluginMain plugin;
+    private final PluginMain plugin;
+    private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.legacySection();
 
-  public ChatEvents(PluginMain plugin) {
-    this.plugin = plugin;
-    plugin.getServer().getPluginManager().registerEvents(this, plugin);
-  }
+    public ChatEvents(PluginMain plugin) {
+        this.plugin = plugin;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
 
-  @EventHandler
-  public void onChatIngame(AsyncPlayerChatEvent event) {
-    IPluginArena arena = plugin.getArenaRegistry().getArena(event.getPlayer());
-    if(plugin.getConfigPreferences().getOption("SEPARATE_ARENA_CHAT")) {
-      if(arena == null) {
-        for(IPluginArena loopArena : plugin.getArenaRegistry().getArenas()) {
-          for(Player player : loopArena.getPlayers()) {
-            if(!plugin.getArgumentsRegistry().getSpyChat().isSpyChatEnabled(player)) {
-              event.getRecipients().remove(player);
+    @EventHandler
+    public void asyncChat(AsyncChatEvent event) {
+        Player sender = event.getPlayer();
+        IPluginArena arena = plugin.getArenaRegistry().getArena(sender);
+        if (plugin.getConfigPreferences().getOption("SEPARATE_ARENA_CHAT")) {
+            event.viewers().removeIf(audience -> {
+                if (!(audience instanceof Player viewer)) return false;
+                if (plugin.getArgumentsRegistry().getSpyChat().isSpyChatEnabled(viewer)) return false;
+                if (arena == null) {
+                    return plugin.getArenaRegistry().getArena(viewer) != null;
+                } else {
+                    if (plugin.getConfigPreferences().getOption("SEPARATE_ARENA_SPECTATORS")) {
+                        IUser user = plugin.getUserManager().getUser(sender);
+                        boolean senderIsSpec = user.isSpectator();
+                        boolean viewerIsSpec = arena.getPlayersLeft().contains(viewer);
+                        if (senderIsSpec) return viewerIsSpec;
+                        else return !viewerIsSpec;
+                    }
+                    return !arena.getPlayers().contains(viewer);
+                }
+            });
+        }
+
+        if (plugin.getConfigPreferences().getOption("PLUGIN_CHAT_FORMAT")) {
+            event.renderer((source, sourceDisplayName, message, viewer) ->
+                    buildFullChatComponent(source, arena, sourceDisplayName, message)
+            );
+        }
+    }
+
+    public @NotNull Component buildFullChatComponent(@NotNull Player sender, @Nullable IPluginArena arena, @NotNull Component displayName, @NotNull Component message) {
+        IUser user = plugin.getUserManager().getUser(sender);
+        String formatBase = this.getFormatStringWithStatistics(user, arena);
+
+        Component base = LEGACY_SERIALIZER.deserialize(formatBase)
+                .replaceText(b -> b.matchLiteral("%player%").replacement(displayName))
+                .replaceText(b -> b.matchLiteral("%message%").replacement(message));
+
+        ChatManager chatManager = plugin.getChatManager();
+        base = chatManager.replace(sender, displayName, base);
+
+        return base;
+    }
+
+
+    private String getFormatStringWithStatistics(IUser user, IPluginArena arena) {
+        String rawFormat = new MessageBuilder("IN_GAME_GAME_CHAT_FORMAT").asKey().getRaw();
+        if (user.isSpectator()) {
+            String deathTag = new MessageBuilder("IN_GAME_DEATH_TAG").asKey().build();
+            if (rawFormat.contains("%kit%")) {
+                rawFormat = rawFormat.replace("%kit%", deathTag);
+            } else {
+                rawFormat = deathTag + rawFormat;
             }
-          }
-        }
-        return;
-      }
-      event.getRecipients().removeIf(player -> !plugin.getArgumentsRegistry().getSpyChat().isSpyChatEnabled(player));
-      event.getRecipients().addAll(new ArrayList<>(arena.getPlayers()));
-      if(plugin.getConfigPreferences().getOption("SEPARATE_ARENA_SPECTATORS")) {
-        if(plugin.getUserManager().getUser(event.getPlayer()).isSpectator()) {
-          event.getRecipients().removeIf(player -> arena.getPlayersLeft().contains(player));
         } else {
-          event.getRecipients().removeIf(player -> !arena.getPlayersLeft().contains(player));
+            String kitName = plugin.getConfigPreferences().getOption("KITS") ? user.getKit().getName() : "-";
+            rawFormat = rawFormat.replace("%kit%", kitName);
         }
-      }
-    } else if(plugin.getConfigPreferences().getOption("SEPARATE_ARENA_SPECTATORS")) {
-      for(IPluginArena loopArena : plugin.getArenaRegistry().getArenas()) {
-        if(plugin.getUserManager().getUser(event.getPlayer()).isSpectator()) {
-          event.getRecipients().removeIf(player -> loopArena.getPlayersLeft().contains(player));
-        } else {
-          event.getRecipients().removeIf(player -> !loopArena.getPlayersLeft().contains(player));
-        }
-      }
+        return new MessageBuilder(rawFormat)
+                .arena(arena)
+                .player(user.getPlayer())
+                .build();
     }
-    if(plugin.getConfigPreferences().getOption("PLUGIN_CHAT_FORMAT")) {
-      String format = formatChatPlaceholders(plugin.getUserManager().getUser(event.getPlayer()), arena);
-      event.setFormat(format);
-      event.setMessage(event.getMessage());
-    }
-  }
-
-  private String formatChatPlaceholders(IUser user, IPluginArena arena) {
-    String formatted = new MessageBuilder("IN_GAME_GAME_CHAT_FORMAT").asKey().getRaw();
-    if(user.isSpectator()) {
-      if(formatted.contains("%kit%")) {
-        formatted = formatted.replace("%kit%", new MessageBuilder("IN_GAME_DEATH_TAG").asKey().build());
-      } else {
-        formatted = new MessageBuilder("IN_GAME_DEATH_TAG").asKey().build() + formatted;
-      }
-    } else {
-      if(!plugin.getConfigPreferences().getOption("KITS")) {
-        formatted = formatted.replace("%kit%", "-");
-      } else {
-        formatted = formatted.replace("%kit%", user.getKit().getName());
-      }
-    }
-    formatted = formatted.replace("%player%", "%1$s");
-    formatted = formatted.replace("%message%", "%2$s");
-    formatted = new MessageBuilder(formatted).arena(arena).player(user.getPlayer()).build();
-    // notice - unresolved % could throw UnknownFormatException
-    return formatted;
-  }
 }

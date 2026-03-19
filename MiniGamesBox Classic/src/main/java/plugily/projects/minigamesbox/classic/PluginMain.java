@@ -18,6 +18,8 @@
 
 package plugily.projects.minigamesbox.classic;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.ArmorStand;
@@ -44,6 +46,7 @@ import plugily.projects.minigamesbox.classic.events.*;
 import plugily.projects.minigamesbox.classic.events.bungee.BungeeEvents;
 import plugily.projects.minigamesbox.classic.events.spectator.SpectatorEvents;
 import plugily.projects.minigamesbox.classic.events.spectator.SpectatorItemsManager;
+import plugily.projects.minigamesbox.classic.handlers.chat.ChatManager;
 import plugily.projects.minigamesbox.classic.handlers.holiday.HolidayManager;
 import plugily.projects.minigamesbox.classic.handlers.hologram.LeaderboardRegistry;
 import plugily.projects.minigamesbox.classic.handlers.items.SpecialItemEvent;
@@ -99,6 +102,8 @@ import java.util.logging.Level;
  * <p>
  * Created at 12.09.2021
  */
+@Getter
+@Setter
 public class PluginMain extends JavaPlugin implements IPluginMain {
 
   private final String pluginMessagePrefix = "[" + getDescription().getName() + "] ";
@@ -127,6 +132,7 @@ public class PluginMain extends JavaPlugin implements IPluginMain {
   private boolean forceDisable = false;
   private ExceptionLogHandler exceptionLogHandler;
   private PermissionsManager permissionsManager;
+  private ChatManager chatManager;
   private BungeeManager bungeeManager;
   private ActionBarManager actionBarManager;
   private FileConfiguration languageConfig;
@@ -245,6 +251,8 @@ public class PluginMain extends JavaPlugin implements IPluginMain {
     holidayManager = new HolidayManager(this);
 
     permissionsManager = new PermissionsManager(this);
+    chatManager = new ChatManager();
+
     if(configPreferences.getOption("BUNGEEMODE")) {
       debugger.debug("Bungee enabled");
       bungeeManager = new BungeeManager(this);
