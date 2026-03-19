@@ -251,7 +251,7 @@ public class PluginMain extends JavaPlugin implements IPluginMain {
     holidayManager = new HolidayManager(this);
 
     permissionsManager = new PermissionsManager(this);
-    chatManager = new ChatManager();
+    chatManager = new ChatManager(this);
 
     if(configPreferences.getOption("BUNGEEMODE")) {
       debugger.debug("Bungee enabled");
