@@ -18,30 +18,27 @@
 
 package plugily.projects.minigamesbox.classic.handlers.party;
 
-import org.bukkit.entity.Player;
+import lombok.Getter;
 
-import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author Tigerpanzer_02
  * <p>
  * Created at 21.09.2021
  */
+@Getter
 public class GameParty {
 
-  private final List<Player> players;
-  private final Player leader;
+  private final UUID gamePartyUUID;
+  private final String leader;
+  private final Set<String> players;
 
-  public GameParty(List<Player> players, Player leader) {
+  public GameParty(UUID gamePartyUUID,String leader,Set<String> players) {
+    this.gamePartyUUID = gamePartyUUID;
     this.players = players;
     this.leader = leader;
   }
 
-  public List<Player> getPlayers() {
-    return players;
-  }
-
-  public Player getLeader() {
-    return leader;
-  }
 }

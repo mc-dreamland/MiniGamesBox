@@ -106,17 +106,18 @@ public class BungeeManager implements Listener {
     ComplementAccessor.getComplement().setJoinMessage(event, "");
     if(!plugin.getArenaRegistry().getArenas().isEmpty()) {
       Player player = event.getPlayer();
-      int rejoinArenaId = isRejoinEnabled() ? plugin.getArenaManager().getRejoinArenaId(player) : -1;
-      IPluginArena arena;
-      if (plugin.getArenaManager().getRejoinArenaId(player) == -1){
-        int bungeeArena = plugin.getArenaRegistry().getBungeeArena();
-        arena = plugin.getArenaRegistry().getArenas().get(bungeeArena);
-      } else {
-        arena = plugin.getArenaRegistry().getArenas().get(rejoinArenaId);
-      }
-      plugin.getArenaManager().joinAttempt(player, arena);
-
-      plugin.getArenaManager().removeRejoinCache(player);
+      plugin.getServer().getScheduler().runTaskLater(plugin, () -> plugin.getArenaManager().joinAttempt(player),getPartyTick());
+//      int rejoinArenaId = isRejoinEnabled() ? plugin.getArenaManager().getRejoinArenaId(player) : -1;
+//      IPluginArena arena;
+//      if (plugin.getArenaManager().getRejoinArenaId(player) == -1){
+//        int bungeeArena = plugin.getArenaRegistry().getBungeeArena();
+//        arena = plugin.getArenaRegistry().getArenas().get(bungeeArena);
+//      } else {
+//        arena = plugin.getArenaRegistry().getArenas().get(rejoinArenaId);
+//      }
+//      plugin.getArenaManager().joinAttempt(player, arena);
+//
+//      plugin.getArenaManager().removeRejoinCache(player);
     }
     plugin.getArenaRegistry().shuffleBungeeArena();
   }
@@ -125,11 +126,23 @@ public class BungeeManager implements Listener {
   public void onQuit(PlayerQuitEvent event) {
     ComplementAccessor.getComplement().setQuitMessage(event, "");
     if(!plugin.getArenaRegistry().getArenas().isEmpty() && plugin.getArenaRegistry().isInArena(event.getPlayer())) {
-      int bungeeArena = plugin.getArenaRegistry().getBungeeArena();
-      IPluginArena arena = plugin.getArenaRegistry().getArenas().get(bungeeArena);
-      plugin.getArenaManager().leaveAttempt(event.getPlayer(), arena);
+      IPluginArena arena = plugin.getArenaRegistry().getArena(event.getPlayer());
+        if (arena != null) {
+            plugin.getArenaManager().leaveAttempt(event.getPlayer(), arena);
+        }
     }
     plugin.getArenaRegistry().shuffleBungeeArena();
+  }
+
+  public boolean isPartyJoinEnabled(){
+    return config.getBoolean("Party.Enabled");
+  }
+  public boolean isPartyJoinInGame(){
+    return config.getBoolean("Party.InGame");
+  }
+
+  public int getPartyTick(){
+    return config.getInt("Party.Tick", 30);
   }
 
   public boolean isRejoinEnabled(){

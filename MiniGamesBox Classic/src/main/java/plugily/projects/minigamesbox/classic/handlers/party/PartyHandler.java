@@ -20,6 +20,8 @@ package plugily.projects.minigamesbox.classic.handlers.party;
 
 import org.bukkit.entity.Player;
 
+import java.util.UUID;
+
 /**
  * @author Tigerpanzer_02
  * <p>
@@ -34,7 +36,7 @@ public interface PartyHandler {
   PartyPluginType getPartyPluginType();
 
   enum PartyPluginType {
-    PARTIES, PAFSpigot, PAFBungee, NONE
+    CUSTOM, PARTIES, PAFSpigot, PAFBungee, NONE
   }
 
 }

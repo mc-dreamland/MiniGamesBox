@@ -13,6 +13,15 @@ Connect-To-Hub: true
 # Should the End Location be the hub? (Players will be connected to hub at the End)
 End-Location-Hub: true
 
+Party:
+  Enable: true   #优先匹配队长房间
+  InGame: false  #允许加入已开始的房间
+  Tick: 10       #开启组队加入,延迟tick进房间 (玩家和队伍信息有延迟)
+
+Rejoin:
+  Enabled: true  #重连功能
+  Time: 600      #保留多久(秒)
+
 # This is useful for bungee game systems.
 # %state% - Game state will be visible at MOTD.
 MOTD:

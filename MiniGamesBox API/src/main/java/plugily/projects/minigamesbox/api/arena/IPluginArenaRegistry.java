@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author Lagggpixel
@@ -28,6 +29,14 @@ public interface IPluginArenaRegistry {
    * @see #isInArena(Player) to check if player is playing
    */
   @Nullable IPluginArena getArena(Player player);
+
+  /**
+   * Returns arena where the player is by UUID
+   *
+   * @param playerUUID target player UUID
+   * @return Arena or null if not playing
+   */
+  @Nullable IPluginArena getArena(UUID playerUUID);
 
   /**
    * Returns arena based by ID

@@ -35,10 +35,7 @@ import plugily.projects.minigamesbox.api.preferences.IConfigPreferences;
 import plugily.projects.minigamesbox.api.user.IUserManager;
 import plugily.projects.minigamesbox.api.utils.misc.IDebugger;
 import plugily.projects.minigamesbox.classic.api.StatsStorage;
-import plugily.projects.minigamesbox.classic.arena.PluginArena;
-import plugily.projects.minigamesbox.classic.arena.PluginArenaManager;
-import plugily.projects.minigamesbox.classic.arena.PluginArenaRegistry;
-import plugily.projects.minigamesbox.classic.arena.PluginArenaUtils;
+import plugily.projects.minigamesbox.classic.arena.*;
 import plugily.projects.minigamesbox.classic.arena.managers.BungeeManager;
 import plugily.projects.minigamesbox.classic.arena.options.ArenaOptionManager;
 import plugily.projects.minigamesbox.classic.commands.arguments.PluginArgumentsRegistry;
@@ -217,6 +214,10 @@ public class PluginMain extends JavaPlugin implements IPluginMain {
     //send console message
     MiscUtils.sendStartUpMessage(this);
 
+
+    this.getServer().getMessenger().registerOutgoingPluginChannel(this, "gameteam:redisteam");
+    this.getServer().getMessenger().registerIncomingPluginChannel(this, "gameteam:redisteam", new GamePartyPluginMessage(this));
+
     //finished initial start
     debugger.debug("[System] [Core] Initialization finished took {0}ms", System.currentTimeMillis() - start);
 
@@ -232,7 +233,7 @@ public class PluginMain extends JavaPlugin implements IPluginMain {
     actionBarManager = new ActionBarManager(this);
     bukkitHelper = new BukkitHelper(this);
     javaScriptEngine = new JavaScriptEngine(this);
-    partyHandler = new PartySupportInitializer().initialize(this);
+    new CustomGamePartyManager(this);
     kitRegistry = new KitRegistry(this);
     User.init(this);
 //    User.cooldownHandlerTask();
@@ -265,6 +266,8 @@ public class PluginMain extends JavaPlugin implements IPluginMain {
     new ChatEvents(this);
     new Events(this);
     new LobbyEvents(this);
+    new GamePartyEvent( this);
+    partyHandler = new PartySupportInitializer().initialize(this);
     spectatorItemsManager = new SpectatorItemsManager(this);
     cuboidSelector = new CuboidSelector(this);
     //arena

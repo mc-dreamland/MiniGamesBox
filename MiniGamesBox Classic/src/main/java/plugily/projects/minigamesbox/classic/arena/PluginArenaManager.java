@@ -20,11 +20,14 @@ package plugily.projects.minigamesbox.classic.arena;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import net.kyori.adventure.text.Component;
+import org.apache.commons.lang3.RandomUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.events.game.PlugilyGameJoinAttemptEvent;
@@ -43,7 +46,6 @@ import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 /**
@@ -101,13 +103,10 @@ public class PluginArenaManager {
     plugin.getDebugger().debug("[{0}] Initial join attempt for {1}", arena.getId(), player.getName());
     long start = System.currentTimeMillis();
     if(!canJoinArenaAndMessage(player, arena) || !checkFullGamePermission(player, arena)) {
+      plugin.getLogger().info("加入失败");
       return;
     }
     plugin.getDebugger().debug("[{0}] Checked join attempt for {1}", arena.getId(), player.getName());
-
-    if(!joinAsParty(player, arena)) {
-      return;
-    }
 
     arena.getPlayers().add(player);
 
@@ -155,38 +154,110 @@ public class PluginArenaManager {
     });
   }
 
-  private boolean joinAsParty(@NotNull Player player, @NotNull IPluginArena arena) {
-    //check if player is in party and send party members to the game
-    GameParty party = plugin.getPartyHandler().getParty(player);
-
-    if(party != null && player.getUniqueId().equals(party.getLeader().getUniqueId())) {
-      if(arena.getMaximumPlayers() - arena.getPlayers().size() >= party.getPlayers().size()) {
-        for(Player partyPlayer : party.getPlayers()) {
-          if(player.getUniqueId().equals(partyPlayer.getUniqueId())) {
-            continue;
-          }
-          IPluginArena partyPlayerGame = plugin.getArenaRegistry().getArena(partyPlayer);
-
-          if(partyPlayerGame != null) {
-            if(partyPlayerGame.getArenaState() == IArenaState.IN_GAME) {
-              continue;
-            }
-            leaveAttempt(partyPlayer, partyPlayerGame);
-            plugin.getDebugger().debug("[Party] Removed party member " + partyPlayer.getName() + " from other not ingame arena " + player.getName());
-          }
-          new MessageBuilder("IN_GAME_JOIN_AS_PARTY_MEMBER").asKey().arena(arena).player(partyPlayer).sendPlayer();
-          joinAttempt(partyPlayer, arena);
-          additionalPartyJoin(player, arena, party.getLeader());
-          plugin.getDebugger().debug("[Party] Added party member " + partyPlayer.getName() + " to arena of " + player.getName());
-        }
-      } else {
-        new MessageBuilder("IN_GAME_MESSAGES_LOBBY_NOT_ENOUGH_SPACE_FOR_PARTY").asKey().arena(arena).player(player).sendPlayer();
-        plugin.getDebugger().debug("[Party] Not enough space for party of " + player.getName());
-        return false;
-      }
+  public void joinAttempt(@NotNull Player player) {
+    plugin.getLogger().info("正在尝试加入游戏:"+player.getName());
+    if (plugin.getArenaRegistry().isInArena(player)) {
+      plugin.getLogger().info("已处于房间内 跳过加入:"+player.getName());
+      return;
     }
-    plugin.getDebugger().debug("[Party] Party check done for " + player.getName());
-    return true;
+    if (joinAsParty(player)) {
+      plugin.getLogger().info("组队加入成功:"+player.getName());
+      return;
+    }
+    if (joinAsRejoin(player)) {
+      plugin.getLogger().info("重连加入成功:"+player.getName());
+      return;
+    }
+    if (joinAsNormal(player)) {
+      plugin.getLogger().info("普通加入成功:"+player.getName());
+      return;
+    }
+    plugin.getLogger().info("加入失败:"+player.getName());
+    player.kick(Component.text("加入游戏失败"), PlayerKickEvent.Cause.UNKNOWN);
+  }
+
+  public boolean joinAsNormal(@NotNull Player player){
+    int bungeeArena = plugin.getArenaRegistry().getBungeeArena();
+    IPluginArena iPluginArena = plugin.getArenaRegistry().getArenas().get(bungeeArena);
+    this.joinAttempt(player, iPluginArena);
+
+
+    if (plugin.getArenaRegistry().isInArena(player)) {
+      onNormalJoinComplete(player, iPluginArena);
+      return true;
+    }
+    return false;
+  }
+
+  private boolean joinAsRejoin(@NotNull Player player){
+    if(!plugin.getBungeeManager().isRejoinEnabled()) {
+      plugin.getLogger().info("没开启重连");
+      return false;
+    }
+    int rejoinArenaId = getRejoinArenaId(player);
+    if (rejoinArenaId == -1){
+      plugin.getLogger().info("无重连记录(超时)");
+      return false;
+    }
+    IPluginArena iPluginArena = plugin.getArenaRegistry().getArenas().get(rejoinArenaId);
+    if (iPluginArena == null) {
+      return false;
+    }
+    this.joinAttempt(player, iPluginArena);
+
+    if (plugin.getArenaRegistry().isInArena(player)) {
+      onRejoinComplete(player, iPluginArena);
+      removeRejoinCache(player);
+      return true;
+    }
+    return false;
+  }
+
+  private boolean joinAsParty(@NotNull Player player) {
+    //队伍加入
+    if(!plugin.getBungeeManager().isPartyJoinEnabled()) {
+      plugin.getLogger().info("没开启组队加入");
+      return false;
+    }
+    GameParty party = plugin.getPartyHandler().getParty(player);
+    if(party == null) {
+      plugin.getLogger().info("队伍为空");
+      return false;
+    }
+    Player leader = Bukkit.getPlayer(party.getLeader());
+    if (leader == null){
+      plugin.getLogger().info("队长不在线");
+      return false;
+    }
+    IPluginArena leaderArena = plugin.getArenaRegistry().getArena(leader);
+    if (leaderArena == null) {
+      plugin.getLogger().info("队长没在房间");
+      return false;
+    }
+    if (!plugin.getBungeeManager().isPartyJoinInGame() && leaderArena.getArenaState() == IArenaState.IN_GAME ) {
+      plugin.getLogger().info("队长房间已开始游戏");
+      return false;
+    }
+
+    this.joinAttempt(player, leaderArena);
+
+    if (plugin.getArenaRegistry().isInArena(player)) {
+      onPartyJoinComplete(player, leaderArena, leader);
+      return true;
+    }
+    return false;
+  }
+
+  public void onPartyJoinComplete(Player player, IPluginArena arena, Player partyLeader) {
+
+  }
+
+  public void onRejoinComplete(Player player, IPluginArena arena) {
+
+  }
+
+  public void onNormalJoinComplete(Player player, IPluginArena arena) {
+
   }
 
   public void additionalPartyJoin(Player player, IPluginArena arena, Player partyLeader) {
@@ -280,6 +351,7 @@ public class PluginArenaManager {
     }
     plugin.getSignManager().updateSigns();
     plugin.getDebugger().debug("[{0}] Final leave attempt for {1} took {2}ms", arena.getId(), player.getName(), System.currentTimeMillis() - start);
+    arena.getPlayers().remove(player);
   }
 
   public void addPlayerQuitData(@NotNull Player player, @NotNull IPluginArena arena) {

@@ -1,5 +1,5 @@
 # User-specific stuff
-.idea/
+.idea/*
 
 *.iml
 *.ipr
@@ -119,3 +119,8 @@ MiniGamesBox Classic/build
 MiniGamesBox Database/build
 MiniGamesBox Inventory/build
 MiniGamesBox Utils/build
+/MiniGamesBox Classic/.classpath
+/MiniGamesBox Classic/.factorypath
+/MiniGamesBox Classic/.project
+/MiniGamesBox API/.settings/*
+/MiniGamesBox Classic/.settings/*

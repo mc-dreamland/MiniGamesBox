@@ -72,7 +72,9 @@ public class PluginRestartingState implements ArenaStateHandler {
         } else {
           plugin.getArenaRegistry().shuffleBungeeArena();
           for(Player player : arena.getPlayers()) {
-            plugin.getArenaManager().joinAttempt(player, plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena()));
+            if (!plugin.getArenaManager().joinAsNormal(player)) {
+              plugin.getArenaManager().joinAsNormal(player);
+            }
           }
         }
       }

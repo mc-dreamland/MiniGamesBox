@@ -63,9 +63,6 @@ public class ConfigOption implements IConfigOption {
     options.put("LEADERBOARDS", new ConfigOption("Leaderboard", true, true));
 
 
-    options.put("EXTERNAL_PARTIES", new ConfigOption("Parties.External", true, true));
-    //todo not implemented yet!!!
-    options.put("OWN_PARTIES", new ConfigOption("Parties.Own", false, true));
     options.put("FALL_DAMAGE", new ConfigOption("Damage.Fall", false, true));
     options.put("DROWNING_DAMAGE", new ConfigOption("Damage.Drowning", false, true));
     options.put("FIRE_DAMAGE", new ConfigOption("Damage.Fire", false, true));

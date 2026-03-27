@@ -32,16 +32,21 @@ public class PartySupportInitializer {
   //todo internal party manager
   public PartyHandler initialize(PluginMain plugin) {
     PartyHandler partyHandler;
-    if(!plugin.getConfigPreferences().getOption("EXTERNAL_PARTIES")) {
-      if(Bukkit.getServer().getPluginManager().getPlugin("Parties") != null) {
-        return new PartiesPartyHandlerImpl();
-      }
-      if(Bukkit.getServer().getPluginManager().getPlugin("Spigot-Party-API-PAF") != null) {
-        return new PAFBPartyHandlerImpl();
-      } else if(Bukkit.getServer().getPluginManager().getPlugin("PartyAndFriends") != null) {
-        return new PAFSPartyHandlerImpl();
-      }
+
+    if(plugin.getBungeeManager() != null && plugin.getBungeeManager().isPartyJoinEnabled()) {
+      return new CustomGamePartyHandlerImpl();
     }
+
+//    if(!plugin.getConfigPreferences().getOption("PARTY_EXTERNAL")) {
+//      if(Bukkit.getServer().getPluginManager().getPlugin("Parties") != null) {
+//        return new PartiesPartyHandlerImpl();
+//      }
+//      if(Bukkit.getServer().getPluginManager().getPlugin("Spigot-Party-API-PAF") != null) {
+//        return new PAFBPartyHandlerImpl();
+//      } else if(Bukkit.getServer().getPluginManager().getPlugin("PartyAndFriends") != null) {
+//        return new PAFSPartyHandlerImpl();
+//      }
+//    }
     partyHandler = new PartyHandler() {
       @Override
       public GameParty getParty(Player player) {

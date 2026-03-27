@@ -110,11 +110,19 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
       return null;
     }
 
-    java.util.UUID playerId = player.getUniqueId();
+    return getArena(player.getUniqueId());
+  }
+
+  @Override
+  @Nullable
+  public IPluginArena getArena(UUID playerUUID) {
+    if(playerUUID == null) {
+      return null;
+    }
 
     for(IPluginArena loopArena : arenas) {
       for(Player arenaPlayer : loopArena.getPlayers()) {
-        if(arenaPlayer.getUniqueId().equals(playerId)) {
+        if(arenaPlayer.getUniqueId().equals(playerUUID)) {
           return loopArena;
         }
       }
