@@ -45,42 +45,42 @@ import java.util.stream.Collectors;
  */
 public class PluginArenaRegistry implements IPluginArenaRegistry {
 
-  private static class BungeeArenaMapping {
-    private final Map<Integer, String> bungeeToArena = new HashMap<>();
-    private final Map<String, Integer> arenaToBungee = new HashMap<>();
+  private static class RoomArenaMapping {
+    private final Map<Integer, String> roomToArena = new HashMap<>();
+    private final Map<String, Integer> arenaToRoom = new HashMap<>();
 
     public void put(int bungeeId, String arenaId) {
-      bungeeToArena.put(bungeeId, arenaId);
-      arenaToBungee.put(arenaId, bungeeId);
+      roomToArena.put(bungeeId, arenaId);
+      arenaToRoom.put(arenaId, bungeeId);
     }
-    public String getArenaId(int bungeeId) {
-      return bungeeToArena.get(bungeeId);
+    public String getArenaId(int roomId) {
+      return roomToArena.get(roomId);
     }
-    public Integer getBungeeId(@NotNull String arenaId) {
-      return arenaToBungee.get(arenaId);
+    public Integer getRoomId(@NotNull String arenaId) {
+      return arenaToRoom.get(arenaId);
     }
     public boolean containsBungeeId(int bungeeId) {
-      return bungeeToArena.containsKey(bungeeId);
+      return roomToArena.containsKey(bungeeId);
     }
 
     public boolean containsArenaId(@NotNull String arenaId) {
-      return arenaToBungee.containsKey(arenaId);
+      return arenaToRoom.containsKey(arenaId);
     }
-    public void removeByBungeeId(int bungeeId) {
-      String arenaId = bungeeToArena.remove(bungeeId);
+    public void removeByRoomId(int roomId) {
+      String arenaId = roomToArena.remove(roomId);
       if (arenaId != null) {
-        arenaToBungee.remove(arenaId);
+        arenaToRoom.remove(arenaId);
       }
     }
     public void removeByArenaId(@NotNull String arenaId) {
-      Integer bungeeId = arenaToBungee.remove(arenaId);
+      Integer bungeeId = arenaToRoom.remove(arenaId);
       if (bungeeId != null) {
-        bungeeToArena.remove(bungeeId);
+        roomToArena.remove(bungeeId);
       }
     }
     public void clear() {
-      bungeeToArena.clear();
-      arenaToBungee.clear();
+      roomToArena.clear();
+      arenaToRoom.clear();
     }
   }
 
@@ -89,7 +89,7 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
   private final PluginMain plugin;
   private final List<World> arenaIngameWorlds = new ArrayList<>();
   private final List<World> arenaWorlds = new ArrayList<>();
-  private final BungeeArenaMapping bungeeArenaMapping = new BungeeArenaMapping();
+  private final RoomArenaMapping roomArenaMapping = new RoomArenaMapping();
 
   private int bungeeArena = -999;
 
@@ -228,7 +228,7 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
         continue;
       }
       registerArena(key);
-      bungeeArenaMapping.put(count, key);
+      roomArenaMapping.put(count, key);
       count++;
     }
 //    for(String id : section.getKeys(false)) {
@@ -363,16 +363,16 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
 
   @Override
   public void addBungeeArenaMapping(int bungeeId, String arenaId) {
-    bungeeArenaMapping.put(bungeeId, arenaId);
+    roomArenaMapping.put(bungeeId, arenaId);
   }
 
   @Override
-  public String getArenaId(int bungeeId) {
-    return bungeeArenaMapping.getArenaId(bungeeId);
+  public String getArenaId(int roomId) {
+    return roomArenaMapping.getArenaId(roomId);
   }
 
   @Override
-  public int getBungeeId(String arenaId) {
-    return bungeeArenaMapping.getBungeeId(arenaId);
+  public int getRoomId(String arenaId) {
+    return roomArenaMapping.getRoomId(arenaId);
   }
 }

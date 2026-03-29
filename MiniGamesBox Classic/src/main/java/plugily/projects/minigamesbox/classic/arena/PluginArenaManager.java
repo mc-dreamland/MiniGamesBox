@@ -21,9 +21,7 @@ package plugily.projects.minigamesbox.classic.arena;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import net.kyori.adventure.text.Component;
-import org.apache.commons.lang3.RandomUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -63,23 +61,27 @@ public class PluginArenaManager {
     rejoinCache.invalidate(player.getUniqueId());
   }
 
-  public int getRejoinArenaId(Player player){
-    Integer arenaId = rejoinCache.getIfPresent(player.getUniqueId());
-    if (arenaId != null){
-      return arenaId;
+  public void removeRejoinCache(Integer roomId){
+    rejoinCache.asMap().values().removeIf(value -> value.equals(roomId));
+  }
+
+  public int getRejoinRoomId(Player player){
+    Integer roomId = rejoinCache.getIfPresent(player.getUniqueId());
+    if (roomId != null){
+      return roomId;
     }
     return -1;
   }
 
   public int getReservedSize(IPluginArena arena,Player player) {
-    int targetBungeeId = plugin.getArenaRegistry().getBungeeId(arena.getId());
+    int targetRoomId = plugin.getArenaRegistry().getRoomId(arena.getId());
 
     return (int) rejoinCache.asMap().entrySet().stream()
             .filter(entry -> {
               if (player == null) return true;
               return !entry.getKey().equals(player.getUniqueId());
             })
-            .filter(entry -> entry.getValue() == targetBungeeId)
+            .filter(entry -> entry.getValue() == targetRoomId)
             .count();
   }
 
@@ -104,6 +106,7 @@ public class PluginArenaManager {
     long start = System.currentTimeMillis();
     if(!canJoinArenaAndMessage(player, arena) || !checkFullGamePermission(player, arena)) {
       plugin.getLogger().info("加入失败");
+      arena.getPlayers().remove(player);
       return;
     }
     plugin.getDebugger().debug("[{0}] Checked join attempt for {1}", arena.getId(), player.getName());
@@ -194,12 +197,14 @@ public class PluginArenaManager {
       plugin.getLogger().info("没开启重连");
       return false;
     }
-    int rejoinArenaId = getRejoinArenaId(player);
-    if (rejoinArenaId == -1){
+    int rejoinRoomId = getRejoinRoomId(player);
+    if (rejoinRoomId == -1){
       plugin.getLogger().info("无重连记录(超时)");
       return false;
     }
-    IPluginArena iPluginArena = plugin.getArenaRegistry().getArenas().get(rejoinArenaId);
+    String arenaId = plugin.getArenaRegistry().getArenaId(rejoinRoomId);
+    IPluginArena iPluginArena = plugin.getArenaRegistry().getArena(arenaId);
+//    IPluginArena iPluginArena = plugin.getArenaRegistry().getArenas().get(rejoinRoomId);
     if (iPluginArena == null) {
       return false;
     }
@@ -356,8 +361,8 @@ public class PluginArenaManager {
 
   public void addPlayerQuitData(@NotNull Player player, @NotNull IPluginArena arena) {
     if (arena.getArenaState() == IArenaState.IN_GAME) {
-      int bungeeId = plugin.getArenaRegistry().getBungeeId(arena.getId());
-      rejoinCache.put(player.getUniqueId(), bungeeId);
+      int roomId = plugin.getArenaRegistry().getRoomId(arena.getId());
+      rejoinCache.put(player.getUniqueId(), roomId);
     }
   }
 
@@ -371,7 +376,7 @@ public class PluginArenaManager {
   public void stopGame(boolean quickStop, @NotNull IPluginArena arena) {
     plugin.getDebugger().debug("[{0}] Game stop event start", arena.getId());
     long start = System.currentTimeMillis();
-
+    removeRejoinCache(plugin.getArenaRegistry().getRoomId(arena.getId()));
     Bukkit.getPluginManager().callEvent(new PlugilyGameStopEvent(arena));
     for(Player player : arena.getPlayers()) {
       if(quickStop) {

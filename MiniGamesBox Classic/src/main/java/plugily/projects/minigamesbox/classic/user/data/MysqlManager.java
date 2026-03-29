@@ -139,7 +139,12 @@ public class MysqlManager implements UserDatabase {
     Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
       String uuid = user.getUniqueId().toString();
       try(Connection connection = database.getConnection(); Statement statement = connection.createStatement()) {
-        String playerName = user.getPlayer() == null ? Bukkit.getOfflinePlayer(uuid).getName() : user.getPlayer().getName();
+//        String playerName = user.getPlayer() == null ? Bukkit.getOfflinePlayer(uuid).getName() : user.getPlayer().getName();
+
+        if (user.getPlayer()==null){
+          return;
+        }
+        String playerName = user.getPlayer().getName();
 
         database.executeUpdate("UPDATE " + getTableName() + " SET name='" + playerName + "' WHERE UUID='" + uuid + "';");
         ResultSet resultSet = statement.executeQuery("SELECT * from " + getTableName() + " WHERE UUID='" + uuid + "'");
@@ -152,7 +157,7 @@ public class MysqlManager implements UserDatabase {
       } catch(SQLException exception) {
         throwException(exception);
       }
-    }, 20L /* required to load stats that are saved on server switch */);
+    }, 1L /* required to load stats that are saved on server switch */);
   }
 
   /**

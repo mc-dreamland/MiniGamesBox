@@ -53,6 +53,8 @@ public class PluginRestartingState implements ArenaStateHandler {
     plugin.getDebugger().performance("ArenaUpdate", "START Arena {0} Running state {1} value for state {2} and time {3}", arena.getId(), IArenaState.RESTARTING, arenaState, arenaTimer);
 
     if(arena.getTimer() <= 0) {
+      int roomId = plugin.getArenaRegistry().getRoomId(arena.getId());
+      plugin.getArenaManager().removeRejoinCache(roomId);
       arena.getScoreboardManager().stopAllScoreboards();
       for(Player player : new HashSet<>(arena.getPlayers())) {
         PluginArenaUtils.resetPlayerAfterGame(arena, player);

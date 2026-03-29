@@ -68,7 +68,7 @@ public interface IPluginArenaRegistry {
 
   void addBungeeArenaMapping(int bungeeId, String arenaId);
 
-  String getArenaId(int bungeeId);
+  String getArenaId(int roomId);
 
-  int getBungeeId(String arenaId);
+  int getRoomId(String arenaId);
 }
