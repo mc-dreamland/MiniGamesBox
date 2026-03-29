@@ -24,7 +24,7 @@
 
     <groupId>plugily.projects</groupId>
     <artifactId>minigamesbox</artifactId>
-    <version>1.4.3-SNAPSHOT26</version>
+    <version>1.4.3-SNAPSHOT27</version>
     <packaging>pom</packaging>
 
     <modules>
