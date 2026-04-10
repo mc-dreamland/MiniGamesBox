@@ -40,14 +40,17 @@ public class ChatEvents implements Listener {
                 if (arena == null) {
                     return plugin.getArenaRegistry().getArena(viewer) != null;
                 } else {
+                    IPluginArena viewerArena = plugin.getArenaRegistry().getArena(viewer);
+                    if (viewerArena != arena) {
+                        return true;
+                    }
                     if (plugin.getConfigPreferences().getOption("SEPARATE_ARENA_SPECTATORS")) {
                         IUser user = plugin.getUserManager().getUser(sender);
                         boolean senderIsSpec = user.isSpectator();
-                        boolean viewerIsSpec = arena.getPlayersLeft().contains(viewer);
-                        if (senderIsSpec) return viewerIsSpec;
-                        else return !viewerIsSpec;
+                        boolean viewerIsSpec = plugin.getUserManager().getUser(viewer).isSpectator();
+                        return senderIsSpec != viewerIsSpec;
                     }
-                    return !arena.getPlayers().contains(viewer);
+                    return false;
                 }
             });
         }
