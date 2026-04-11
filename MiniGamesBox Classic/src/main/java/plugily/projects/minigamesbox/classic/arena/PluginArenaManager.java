@@ -55,7 +55,8 @@ public class PluginArenaManager {
 
   private final PluginMain plugin;
 
-  private final Cache<UUID, Integer> rejoinCache;
+  private final Cache<UUID, Integer> rejoinCache;     //重连房间id保存
+  private final Cache<UUID, Boolean> joiningPlayers;  //正在加入的玩家
 
   public void removeRejoinCache(Player player) {
     rejoinCache.invalidate(player.getUniqueId());
@@ -90,6 +91,9 @@ public class PluginArenaManager {
     rejoinCache = CacheBuilder.newBuilder()
             .expireAfterWrite(plugin.getBungeeManager().getRejoinTime(), TimeUnit.SECONDS)
             .build();
+    joiningPlayers = CacheBuilder.newBuilder()
+            .expireAfterWrite(5, TimeUnit.SECONDS)
+            .build();
   }
 
   /**
@@ -110,15 +114,23 @@ public class PluginArenaManager {
       return;
     }
     plugin.getDebugger().debug("[{0}] Checked join attempt for {1}", arena.getId(), player.getName());
-
-    arena.getPlayers().add(player);
+    joiningPlayers.put(player.getUniqueId(), Boolean.TRUE);
 
     if(arena.getArenaState() == IArenaState.IN_GAME || arena.getArenaState() == IArenaState.ENDING) {
       if(!plugin.getConfigPreferences().getOption("SPECTATORS")) {
         new MessageBuilder("IN_GAME_SPECTATOR_BLOCKED").asKey().player(player).arena(arena).sendPlayer();
+        arena.getPlayers().remove(player);
+        joiningPlayers.invalidate(player.getUniqueId());
         return;
       }
-      PluginArenaUtils.preparePlayerForGame(arena, player, arena.getSpectatorLocation(), true).thenAccept(act -> {
+      PluginArenaUtils.preparePlayerForGame(arena, player, arena.getSpectatorLocation(), true).thenAccept(success -> {
+        if(!success) {
+          handleJoinFailure(player, arena, "旁观传送失败");
+          return;
+        }
+        if(!markJoinSuccess(player, arena)) {
+          return;
+        }
         new MessageBuilder("IN_GAME_SPECTATOR_YOU_ARE_SPECTATOR").asKey().player(player).arena(arena).sendPlayer();
         PluginArenaUtils.hidePlayer(player, arena);
         for(Player spectator : arena.getPlayers()) {
@@ -130,11 +142,22 @@ public class PluginArenaManager {
         }
         additionalSpectatorSettings(player, arena);
         plugin.getDebugger().debug("[{0}] Final join attempt as spectator for {1} took {2}ms", arena.getId(), player.getName(), System.currentTimeMillis() - start);
+      }).exceptionally(throwable -> {
+        handleJoinFailure(player, arena, "旁观加入准备异常");
+        plugin.getLogger().log(Level.WARNING, "[" + arena.getId() + "] 玩家 " + player.getName() + " 旁观加入准备异常", throwable);
+        return null;
       });
       return;
     }
 
-    PluginArenaUtils.preparePlayerForGame(arena, player, arena.getLobbyLocation(), false).thenAccept(act -> {
+    PluginArenaUtils.preparePlayerForGame(arena, player, arena.getLobbyLocation(), false).thenAccept(success -> {
+      if(!success) {
+        handleJoinFailure(player, arena, "大厅传送失败");
+        return;
+      }
+      if(!markJoinSuccess(player, arena)) {
+        return;
+      }
       new MessageBuilder(MessageBuilder.ActionType.JOIN).arena(arena).player(player).sendArena();
       new TitleBuilder("IN_GAME_JOIN_TITLE").asKey().arena(arena).player(player).sendPlayer();
 
@@ -154,29 +177,56 @@ public class PluginArenaManager {
 
       plugin.getSignManager().updateSigns();
       plugin.getDebugger().debug("[{0}] Final join attempt as player for {1} took {2}ms", arena.getId(), player.getName(), System.currentTimeMillis() - start);
+    }).exceptionally(throwable -> {
+      handleJoinFailure(player, arena, "大厅加入准备异常");
+      plugin.getLogger().log(Level.WARNING, "[" + arena.getId() + "] 玩家 " + player.getName() + " 大厅加入准备异常", throwable);
+      return null;
     });
   }
 
+  private boolean markJoinSuccess(Player player, IPluginArena arena) { //加入arena是否成功
+    joiningPlayers.invalidate(player.getUniqueId());
+    if(!player.isOnline()) {
+      arena.getPlayers().remove(player);
+      return false;
+    }
+    arena.getPlayers().add(player);
+    return true;
+  }
+
+  private void handleJoinFailure(Player player, IPluginArena arena, String reason) {
+    joiningPlayers.invalidate(player.getUniqueId());
+    arena.getPlayers().remove(player);
+    plugin.getLogger().warning("玩家 " + player.getName() + " 加入房间 " + arena.getId() + " 失败，原因: " + reason);
+    if(player.isOnline()) {
+      player.kick(Component.text("加入游戏失败"), PlayerKickEvent.Cause.UNKNOWN);
+    }
+  }
+
   public void joinAttempt(@NotNull Player player) {
-    plugin.getLogger().info("正在尝试加入游戏:"+player.getName());
-    if (plugin.getArenaRegistry().isInArena(player)) {
-      plugin.getLogger().info("已处于房间内 跳过加入:"+player.getName());
+    plugin.getLogger().info("正在尝试加入游戏:" + player.getName());
+    if (plugin.getArenaRegistry().isInArena(player) || isJoinPending(player)) {
+      plugin.getLogger().info("已处于房间内或正在加入中，跳过加入:" + player.getName());
       return;
     }
     if (joinAsParty(player)) {
-      plugin.getLogger().info("组队加入成功:"+player.getName());
+      plugin.getLogger().info("组队加入流程已接管:" + player.getName());
       return;
     }
     if (joinAsRejoin(player)) {
-      plugin.getLogger().info("重连加入成功:"+player.getName());
+      plugin.getLogger().info("重连加入流程已接管:" + player.getName());
       return;
     }
     if (joinAsNormal(player)) {
-      plugin.getLogger().info("普通加入成功:"+player.getName());
+      plugin.getLogger().info("普通加入流程已接管:" + player.getName());
       return;
     }
-    plugin.getLogger().info("加入失败:"+player.getName());
+    plugin.getLogger().info("加入失败:" + player.getName());
     player.kick(Component.text("加入游戏失败"), PlayerKickEvent.Cause.UNKNOWN);
+  }
+
+  private boolean isJoinPending(@NotNull Player player) {
+    return joiningPlayers.getIfPresent(player.getUniqueId()) != null;
   }
 
   public boolean joinAsNormal(@NotNull Player player){
@@ -184,8 +234,7 @@ public class PluginArenaManager {
     IPluginArena iPluginArena = plugin.getArenaRegistry().getArenas().get(bungeeArena);
     this.joinAttempt(player, iPluginArena);
 
-
-    if (plugin.getArenaRegistry().isInArena(player)) {
+    if (plugin.getArenaRegistry().isInArena(player) || isJoinPending(player)) {
       onNormalJoinComplete(player, iPluginArena);
       return true;
     }
@@ -194,23 +243,22 @@ public class PluginArenaManager {
 
   private boolean joinAsRejoin(@NotNull Player player){
     if(!plugin.getBungeeManager().isRejoinEnabled()) {
-      plugin.getLogger().info("没开启重连");
+      plugin.getLogger().info("未开启重连");
       return false;
     }
     int rejoinRoomId = getRejoinRoomId(player);
     if (rejoinRoomId == -1){
-      plugin.getLogger().info("无重连记录(超时)");
+      plugin.getLogger().info("无重连记录（已超时）");
       return false;
     }
     String arenaId = plugin.getArenaRegistry().getArenaId(rejoinRoomId);
     IPluginArena iPluginArena = plugin.getArenaRegistry().getArena(arenaId);
-//    IPluginArena iPluginArena = plugin.getArenaRegistry().getArenas().get(rejoinRoomId);
     if (iPluginArena == null) {
       return false;
     }
     this.joinAttempt(player, iPluginArena);
 
-    if (plugin.getArenaRegistry().isInArena(player)) {
+    if (plugin.getArenaRegistry().isInArena(player) || isJoinPending(player)) {
       onRejoinComplete(player, iPluginArena);
       removeRejoinCache(player);
       return true;
@@ -221,7 +269,7 @@ public class PluginArenaManager {
   private boolean joinAsParty(@NotNull Player player) {
     //队伍加入
     if(!plugin.getBungeeManager().isPartyJoinEnabled()) {
-      plugin.getLogger().info("没开启组队加入");
+      plugin.getLogger().info("未开启组队加入");
       return false;
     }
     GameParty party = plugin.getPartyHandler().getParty(player);
@@ -236,7 +284,7 @@ public class PluginArenaManager {
     }
     IPluginArena leaderArena = plugin.getArenaRegistry().getArena(leader);
     if (leaderArena == null) {
-      plugin.getLogger().info("队长没在房间");
+      plugin.getLogger().info("队长不在房间中");
       return false;
     }
     if (!plugin.getBungeeManager().isPartyJoinInGame() && leaderArena.getArenaState() == IArenaState.IN_GAME ) {
@@ -246,7 +294,7 @@ public class PluginArenaManager {
 
     this.joinAttempt(player, leaderArena);
 
-    if (plugin.getArenaRegistry().isInArena(player)) {
+    if (plugin.getArenaRegistry().isInArena(player) || isJoinPending(player)) {
       onPartyJoinComplete(player, leaderArena, leader);
       return true;
     }

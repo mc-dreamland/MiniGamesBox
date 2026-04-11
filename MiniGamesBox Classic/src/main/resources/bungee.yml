@@ -14,7 +14,7 @@ Connect-To-Hub: true
 End-Location-Hub: true
 
 Party:
-  Enable: true   #优先匹配队长房间
+  Enabled: true   #优先匹配队长房间
   InGame: false  #允许加入已开始的房间
   Tick: 10       #开启组队加入,延迟tick进房间 (玩家和队伍信息有延迟)
 

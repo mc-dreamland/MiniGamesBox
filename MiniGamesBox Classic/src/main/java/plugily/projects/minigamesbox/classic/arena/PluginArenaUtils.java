@@ -75,9 +75,12 @@ public class PluginArenaUtils {
     }
   }
 
-  public static CompletableFuture<Void> preparePlayerForGame(
+  public static CompletableFuture<Boolean> preparePlayerForGame(
       IPluginArena arena, Player player, Location location, boolean spectator) {
-    return VersionUtils.teleport(player, location).thenAccept(bo -> {
+    return VersionUtils.teleport(player, location).thenApply(bo -> {
+      if(!Boolean.TRUE.equals(bo)) {
+        return false;
+      }
       IUser user = plugin.getUserManager().getUser(player);
       if (plugin.getConfigPreferences().getOption("INVENTORY_MANAGER")) {
         InventorySerializer.saveInventoryToFile(plugin, player);
@@ -121,6 +124,7 @@ public class PluginArenaUtils {
       player.updateInventory();
       arena.getBossbarManager().doBarAction(IPluginArena.IBarAction.ADD, player);
       arena.getScoreboardManager().createScoreboard(user);
+      return true;
     });
   }
 
