@@ -52,7 +52,9 @@ public interface IPluginArenaRegistry {
 
   void unregisterArena(IPluginArena arena);
 
-  void registerArenas();
+    void restartArena(IPluginArena arena);
+
+    void registerArenas();
 
   void registerArena(String key);
 

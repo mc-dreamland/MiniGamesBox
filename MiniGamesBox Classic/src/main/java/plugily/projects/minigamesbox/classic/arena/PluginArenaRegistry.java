@@ -18,11 +18,14 @@
 
 package plugily.projects.minigamesbox.classic.arena;
 
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
@@ -30,6 +33,7 @@ import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.arena.IPluginArenaRegistry;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
+import plugily.projects.minigamesbox.classic.handlers.worlds.WorldHandler;
 import plugily.projects.minigamesbox.classic.utils.configuration.ConfigUtils;
 import plugily.projects.minigamesbox.classic.utils.serialization.LocationSerializer;
 
@@ -195,6 +199,24 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
     }
     plugin.getSignManager().loadSigns();
   }
+  @Override
+  public void restartArena(IPluginArena arena){
+    unregisterArena(arena);
+    unregisterWorld(arena);
+    Bukkit.getScheduler().runTaskLater(plugin, () -> registerArena(arena.getId()), 1);
+  }
+
+  public void unregisterWorld(IPluginArena arena) {
+    World world = arena.getStartLocation().getWorld();
+    if(world == null) {
+      return;
+    }
+    world.getPlayers().forEach(player -> player.kick(Component.text("世界重启"), PlayerKickEvent.Cause.UNKNOWN));
+
+    if(!WorldHandler.deleteWorld(world)) {
+      plugin.getDebugger().debug("[{0}] 卸载,删除 世界 失败 {1}", arena.getId(), world.getName());
+    }
+  }
 
   public PluginArena getNewArena(String id) {
     return new PluginArena(id);
@@ -259,7 +281,9 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
       plugin.getDebugger().sendConsoleMsg(new MessageBuilder("VALIDATOR_NO_INSTANCES_CREATED").asKey().build());
       return;
     }
-
+    if (!WorldHandler.copyWorldFile(plugin,key)) {
+      return;
+    }
     PluginArena arena = getNewArena(key);
 
     if(!validatorChecks(section, arena, key) || !additionalValidatorChecks(section, arena, key)) {

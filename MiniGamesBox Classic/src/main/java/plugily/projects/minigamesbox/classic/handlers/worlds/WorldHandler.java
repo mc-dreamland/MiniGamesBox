@@ -3,10 +3,17 @@ package plugily.projects.minigamesbox.classic.handlers.worlds;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
+import plugily.projects.minigamesbox.classic.PluginMain;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 public class WorldHandler {
+
+  public static final String BACKUP_WORLDS_SUFFIX = "_backupWorlds";
 
   /**
    * A method to clone a world given the original world to clone from and the name of the new world
@@ -46,6 +53,41 @@ public class WorldHandler {
   }
 
   /**
+   * Copies a backup world folder into the server root world container.
+   * This method only copies files and does not load or unload worlds.
+   *
+   * @param plugin the plugin used to resolve the backup directory name
+   * @param worldName the backup world folder name inside <pluginName>_backupWorlds
+   * @return true if the copy completed successfully, false otherwise
+   */
+  public static boolean copyWorldFile(PluginMain plugin, String worldName) {
+    if(plugin == null || worldName == null ) {
+      return false;
+    }
+
+    if(worldName.trim().isEmpty() ) {
+      return false;
+    }
+
+    File worldContainer = Bukkit.getWorldContainer();
+    plugin.getLogger().info("复制路径:"+plugin.getDescription().getName() + BACKUP_WORLDS_SUFFIX);
+    File backupFolder = new File(worldContainer, plugin.getDescription().getName() + BACKUP_WORLDS_SUFFIX);
+    File sourceFolder = new File(backupFolder, worldName);
+    File targetFolder = new File(worldContainer, worldName);
+
+    if(!sourceFolder.exists() || !sourceFolder.isDirectory()) {
+      return false;
+    }
+
+    try {
+      copyFolder(sourceFolder.toPath(), targetFolder.toPath());
+      return true;
+    } catch(IOException exception) {
+      return false;
+    }
+  }
+
+  /**
    * Deletes a folder and all its contents recursively.
    *
    * @param  folder  the folder to be deleted
@@ -62,6 +104,32 @@ public class WorldHandler {
     }
     if (!folder.delete()) {
       throw new WorldDeletionException("Failed to delete folder: " + folder.getAbsolutePath());
+    }
+  }
+
+  private static void copyFolder(Path source, Path target) throws IOException {
+    if(Files.isDirectory(source)) {
+      Files.createDirectories(target);
+    }
+
+    File[] files = source.toFile().listFiles();
+    if(files == null) {
+      return;
+    }
+
+    for(File file : files) {
+      Path destination = target.resolve(file.getName());
+      if(file.isDirectory()) {
+        copyFolder(file.toPath(), destination);
+        continue;
+      }
+
+      if("uid.dat".equalsIgnoreCase(file.getName()) || "session.lock".equalsIgnoreCase(file.getName())) {
+        continue;
+      }
+
+      Files.createDirectories(destination.getParent());
+      Files.copy(file.toPath(), destination, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
     }
   }
 

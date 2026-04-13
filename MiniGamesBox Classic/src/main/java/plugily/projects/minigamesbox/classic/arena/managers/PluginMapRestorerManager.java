@@ -40,6 +40,8 @@ public class PluginMapRestorerManager implements IPluginMapRestorerManager {
     arena.loadArenaOptions();
     arena.getScoreboardManager().stopAllScoreboards();
     arena.getPlayers().clear();
+    arena.cancel();
+    arena.getPlugin().getArenaRegistry().restartArena(arena);
   }
 
 }
