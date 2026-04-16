@@ -124,3 +124,6 @@ MiniGamesBox Utils/build
 /MiniGamesBox Classic/.project
 /MiniGamesBox API/.settings/*
 /MiniGamesBox Classic/.settings/*
+/MiniGamesBox API/.classpath
+/MiniGamesBox API/.factorypath
+/MiniGamesBox API/.project

@@ -38,7 +38,9 @@ public class WorldHandler {
   public static boolean deleteWorld(World world) {
     boolean success = true;
     if (world != null) {
-      Bukkit.unloadWorld(world, true);
+      if (!Bukkit.unloadWorld(world, true)) {
+        return false;
+      }
       File worldFolder = world.getWorldFolder();
       if (worldFolder.exists()) {
         try {
@@ -70,7 +72,7 @@ public class WorldHandler {
     }
 
     File worldContainer = Bukkit.getWorldContainer();
-    plugin.getLogger().info("复制路径:"+plugin.getDescription().getName() + BACKUP_WORLDS_SUFFIX);
+    plugin.getLogger().info("复制地图中:"+plugin.getDescription().getName() + BACKUP_WORLDS_SUFFIX+"\\"+worldName);
     File backupFolder = new File(worldContainer, plugin.getDescription().getName() + BACKUP_WORLDS_SUFFIX);
     File sourceFolder = new File(backupFolder, worldName);
     File targetFolder = new File(worldContainer, worldName);

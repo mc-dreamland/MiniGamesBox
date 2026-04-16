@@ -203,7 +203,7 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
   public void restartArena(IPluginArena arena){
     unregisterArena(arena);
     unregisterWorld(arena);
-    Bukkit.getScheduler().runTaskLater(plugin, () -> registerArena(arena.getId()), 1);
+    Bukkit.getScheduler().runTaskLater(plugin, () -> registerArena(arena.getId()), 180);
   }
 
   public void unregisterWorld(IPluginArena arena) {
@@ -212,10 +212,11 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
       return;
     }
     world.getPlayers().forEach(player -> player.kick(Component.text("世界重启"), PlayerKickEvent.Cause.UNKNOWN));
-
-    if(!WorldHandler.deleteWorld(world)) {
-      plugin.getDebugger().debug("[{0}] 卸载,删除 世界 失败 {1}", arena.getId(), world.getName());
-    }
+    Bukkit.getScheduler().runTaskLater(plugin, () ->{
+      if(!WorldHandler.deleteWorld(world)) {
+        plugin.getDebugger().debug("[{0}] 卸载,删除 世界 失败 {1}", arena.getId(), world.getName());
+      }
+    } , 60);
   }
 
   public PluginArena getNewArena(String id) {
