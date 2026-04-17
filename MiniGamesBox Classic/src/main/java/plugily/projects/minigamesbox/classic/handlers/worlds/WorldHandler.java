@@ -13,7 +13,7 @@ import java.nio.file.StandardCopyOption;
 
 public class WorldHandler {
 
-  public static final String BACKUP_WORLDS_SUFFIX = "_backupWorlds";
+  public static final String BACKUP_WORLDS = "BackupWorlds";
 
   /**
    * A method to clone a world given the original world to clone from and the name of the new world
@@ -72,8 +72,8 @@ public class WorldHandler {
     }
 
     File worldContainer = Bukkit.getWorldContainer();
-    plugin.getLogger().info("复制地图中:"+plugin.getDescription().getName() + BACKUP_WORLDS_SUFFIX+"\\"+worldName);
-    File backupFolder = new File(worldContainer, plugin.getDescription().getName() + BACKUP_WORLDS_SUFFIX);
+    plugin.getLogger().info("复制地图中:"+worldName);
+    File backupFolder = new File(worldContainer, "plugins" + File.separator + plugin.getDescription().getName() + File.separator + BACKUP_WORLDS);
     File sourceFolder = new File(backupFolder, worldName);
     File targetFolder = new File(worldContainer, worldName);
 

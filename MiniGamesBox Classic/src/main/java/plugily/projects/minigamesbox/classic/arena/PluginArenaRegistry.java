@@ -283,6 +283,7 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
       return;
     }
     if (!WorldHandler.copyWorldFile(plugin,key)) {
+      plugin.getLogger().warning("地图文件异常");
       return;
     }
     PluginArena arena = getNewArena(key);
