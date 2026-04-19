@@ -201,9 +201,10 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
   }
   @Override
   public void restartArena(IPluginArena arena){
+    plugin.getLogger().info("重置地图房间:"+arena.getId());
     unregisterArena(arena);
     unregisterWorld(arena);
-    Bukkit.getScheduler().runTaskLater(plugin, () -> registerArena(arena.getId()), 180);
+    Bukkit.getScheduler().runTaskLater(plugin, () -> registerArena(arena.getId()), 300);
   }
 
   public void unregisterWorld(IPluginArena arena) {
@@ -211,12 +212,20 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
     if(world == null) {
       return;
     }
-    world.getPlayers().forEach(player -> player.kick(Component.text("世界重启"), PlayerKickEvent.Cause.UNKNOWN));
+    world.getPlayers().forEach(player -> {
+      plugin.getLogger().info("重置地图:"+arena.getId()+" - hub: "+player.getName());
+      plugin.getBungeeManager().connectToHub(player);
+    });
+    Bukkit.getScheduler().runTaskLater(plugin, () -> world.getPlayers().forEach(player -> {
+      IPluginArena playerArena = getArena(player);
+      plugin.getLogger().warning("重置地图:"+arena.getId()+" - kick: "+player.getName() + " arena:" + (playerArena!=null?playerArena.getId():"无") + " isOnline:"+player.isOnline());
+      player.kick(Component.text("世界重启"), PlayerKickEvent.Cause.UNKNOWN);
+    }), 100);
     Bukkit.getScheduler().runTaskLater(plugin, () ->{
       if(!WorldHandler.deleteWorld(world)) {
         plugin.getDebugger().debug("[{0}] 卸载,删除 世界 失败 {1}", arena.getId(), world.getName());
       }
-    } , 60);
+    } , 200);
   }
 
   public PluginArena getNewArena(String id) {
