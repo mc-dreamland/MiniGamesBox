@@ -28,9 +28,9 @@ public interface IUserManager {
 
   void updateLevelStat(IUser user, IPluginArena arena);
 
-  void storeUserQuitDuringGame(Player player, IPluginArena arena);
+//  void storeUserQuitDuringGame(Player player, IPluginArena arena);
 
-  HashMap<UUID, IPluginArena> getUsersQuitDuringGame();
+//  HashMap<UUID, IPluginArena> getUsersQuitDuringGame();
 
   void saveAllStatistic(IUser user);
 

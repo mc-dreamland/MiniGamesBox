@@ -28,6 +28,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.user.IUser;
@@ -60,6 +61,20 @@ public class SpectatorSettingsMenu implements Listener {
   public List<Player> autoTeleport = new ArrayList<>();
   public Map<Player, Player> targetPlayer = new HashMap<>();
   public List<Player> invisibleSpectators = new ArrayList<>();
+
+  @EventHandler
+  public void onQuit(PlayerQuitEvent event) {
+    plugin.getSpectatorItemsManager().getSpectatorSettingsMenu().clearPlayer(event.getPlayer());
+  }
+
+  public void clearPlayer(Player player){
+    firstPersonMode.remove(player);
+    autoTeleport.remove(player);
+    targetPlayer.remove(player);
+    targetPlayer.entrySet().removeIf(entry -> entry.getValue().equals(player));
+    invisibleSpectators.remove(player);
+  }
+
 
   public SpectatorSettingsMenu(PluginMain plugin) {
     this.plugin = plugin;

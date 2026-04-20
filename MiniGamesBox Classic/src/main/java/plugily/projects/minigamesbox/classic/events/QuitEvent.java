@@ -58,7 +58,7 @@ public class QuitEvent implements Listener {
         .removeSpecialItemsOfStage(player, SpecialItem.DisplayStage.SERVER_JOIN);
     IPluginArena arena = plugin.getArenaRegistry().getArena(player);
     if (arena != null) {
-      plugin.getUserManager().storeUserQuitDuringGame(player, arena);
+//      plugin.getUserManager().storeUserQuitDuringGame(player, arena);
       IUser user = plugin.getUserManager().getUser(player);
       plugin.getUserManager().saveAllStatistic(user);
       plugin.getArenaManager().leaveAttempt(player, arena);

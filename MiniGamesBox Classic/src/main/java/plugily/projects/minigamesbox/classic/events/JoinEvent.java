@@ -46,11 +46,11 @@ public class JoinEvent implements Listener {
 
   @EventHandler
   public void onJoin(PlayerJoinEvent event) {
-    IPluginArena arena = plugin.getUserManager().getUsersQuitDuringGame().get(event.getPlayer().getUniqueId());
-    if(arena != null) {
-      VersionUtils.teleport(event.getPlayer(), arena.getEndLocation());
-      plugin.getUserManager().getUsersQuitDuringGame().remove(event.getPlayer().getUniqueId());
-    }
+//    IPluginArena arena = plugin.getUserManager().getUsersQuitDuringGame().get(event.getPlayer().getUniqueId());
+//    if(arena != null) {
+//      VersionUtils.teleport(event.getPlayer(), arena.getEndLocation());
+//      plugin.getUserManager().getUsersQuitDuringGame().remove(event.getPlayer().getUniqueId());
+//    }
     plugin.getUserManager().loadStatistics(plugin.getUserManager().getUser(event.getPlayer()));
     //load player inventory in case of server crash, file is deleted once loaded so if file was already
     //deleted player won't receive his backup, in case of crash he will get it back
