@@ -220,6 +220,7 @@ public class MessageBuilder {
     message = replace(message, "%arena_min_players%", () -> placeholderColorOther + arena.getMinimumPlayers() + messageColor);
     message = replace(message, "%arena_players%", () -> placeholderColorOther + arena.getPlayers() + messageColor);
     message = replace(message, "%arena_players_size%", () -> placeholderColorOther + arena.getPlayers().size() + messageColor);
+    message = replace(message, "%arena_rejoin_size%", () -> placeholderColorOther + plugin.getArenaManager().getRejoinSize(arena,null) + messageColor);
     message = replace(message, "%arena_players_left%", () -> placeholderColorOther + arena.getPlayersLeft() + messageColor);
     message = replace(message, "%arena_players_left_size%", () -> placeholderColorOther + arena.getPlayersLeft().size() + messageColor);
     message = replace(message, "%arena_max_players%", () -> placeholderColorOther + arena.getMaximumPlayers() + messageColor);

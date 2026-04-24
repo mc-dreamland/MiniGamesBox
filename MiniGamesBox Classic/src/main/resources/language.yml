@@ -50,7 +50,7 @@ Commands:
     Reload-Success: "%plugin_prefix% Arenas reloaded!"
     List:
       Header: "%plugin_name% arenas: Name State Players"
-      Format: "%arena_name% %arena_state_placeholder% %arena_players_size%/%arena_max_players%"
+      Format: "%arena_name% %arena_state_placeholder% %arena_rejoin_size%+%arena_players_size%/%arena_max_players%"
       No-Arenas: "%color_chat_issue%%plugin_prefix% There are no game instances!"
     Spychat:
       Toggled: "%plugin_prefix% Game spy chat toggled to %value%"

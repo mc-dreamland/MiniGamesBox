@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -66,11 +67,17 @@ public interface IPluginArenaRegistry {
 
   void shuffleBungeeArena();
 
-  int getBungeeArena();
+  @Nullable IPluginArena getCurrentBungeeArena();
 
-  void addBungeeArenaMapping(int bungeeId, String arenaId);
+  void setRoomId(String roomId);
 
-  String getArenaId(int roomId);
+  String getRoomId();
 
-  int getRoomId(String arenaId);
+//  int getBungeeArena();
+
+//  void addBungeeArenaMapping(int bungeeId, String arenaId);
+
+//  String getArenaId(int roomId);
+
+//  int getRoomId(String arenaId);
 }

@@ -39,7 +39,6 @@ import plugily.projects.minigamesbox.classic.utils.serialization.LocationSeriali
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 
 
 /**
@@ -49,53 +48,54 @@ import java.util.stream.Collectors;
  */
 public class PluginArenaRegistry implements IPluginArenaRegistry {
 
-  private static class RoomArenaMapping {
-    private final Map<Integer, String> roomToArena = new HashMap<>();
-    private final Map<String, Integer> arenaToRoom = new HashMap<>();
+//  private static class RoomArenaMapping {
+//    private final Map<Integer, String> roomToArena = new HashMap<>();
+//    private final Map<String, Integer> arenaToRoom = new HashMap<>();
+//
+//    public void put(int bungeeId, String arenaId) {
+//      roomToArena.put(bungeeId, arenaId);
+//      arenaToRoom.put(arenaId, bungeeId);
+//    }
+//    public String getArenaId(int roomId) {
+//      return roomToArena.get(roomId);
+//    }
+//    public Integer getRoomId(@NotNull String arenaId) {
+//      return arenaToRoom.get(arenaId);
+//    }
+//    public boolean containsBungeeId(int bungeeId) {
+//      return roomToArena.containsKey(bungeeId);
+//    }
+//
+//    public boolean containsArenaId(@NotNull String arenaId) {
+//      return arenaToRoom.containsKey(arenaId);
+//    }
+//    public void removeByRoomId(int roomId) {
+//      String arenaId = roomToArena.remove(roomId);
+//      if (arenaId != null) {
+//        arenaToRoom.remove(arenaId);
+//      }
+//    }
+//    public void removeByArenaId(@NotNull String arenaId) {
+//      Integer bungeeId = arenaToRoom.remove(arenaId);
+//      if (bungeeId != null) {
+//        roomToArena.remove(bungeeId);
+//      }
+//    }
+//    public void clear() {
+//      roomToArena.clear();
+//      arenaToRoom.clear();
+//    }
+//  }
 
-    public void put(int bungeeId, String arenaId) {
-      roomToArena.put(bungeeId, arenaId);
-      arenaToRoom.put(arenaId, bungeeId);
-    }
-    public String getArenaId(int roomId) {
-      return roomToArena.get(roomId);
-    }
-    public Integer getRoomId(@NotNull String arenaId) {
-      return arenaToRoom.get(arenaId);
-    }
-    public boolean containsBungeeId(int bungeeId) {
-      return roomToArena.containsKey(bungeeId);
-    }
 
-    public boolean containsArenaId(@NotNull String arenaId) {
-      return arenaToRoom.containsKey(arenaId);
-    }
-    public void removeByRoomId(int roomId) {
-      String arenaId = roomToArena.remove(roomId);
-      if (arenaId != null) {
-        arenaToRoom.remove(arenaId);
-      }
-    }
-    public void removeByArenaId(@NotNull String arenaId) {
-      Integer bungeeId = arenaToRoom.remove(arenaId);
-      if (bungeeId != null) {
-        roomToArena.remove(bungeeId);
-      }
-    }
-    public void clear() {
-      roomToArena.clear();
-      arenaToRoom.clear();
-    }
-  }
-
-
-  private final List<IPluginArena> arenas = new ArrayList<>();
+  private final Map<String,IPluginArena> arenas = new LinkedHashMap<>();
   private final PluginMain plugin;
   private final List<World> arenaIngameWorlds = new ArrayList<>();
   private final List<World> arenaWorlds = new ArrayList<>();
-  private final RoomArenaMapping roomArenaMapping = new RoomArenaMapping();
+//  private final RoomArenaMapping roomArenaMapping = new RoomArenaMapping();
 
-  private int bungeeArena = -999;
+//  private int bungeeArena = -999;
+  private String roomId = "";
 
   public PluginArenaRegistry(PluginMain plugin) {
     this.plugin = plugin;
@@ -123,42 +123,74 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
     if(playerUUID == null) {
       return null;
     }
-
-    for(IPluginArena loopArena : arenas) {
-      for(Player arenaPlayer : loopArena.getPlayers()) {
-        if(arenaPlayer.getUniqueId().equals(playerUUID)) {
-          return loopArena;
-        }
+      for (Map.Entry<String, IPluginArena> entry : arenas.entrySet()) {
+          IPluginArena value = entry.getValue();
+          Set<Player> players = value.getPlayers();
+          for (Player arenaPlayer : players) {
+              if(arenaPlayer.getUniqueId().equals(playerUUID)) {
+                  return value;
+              }
+          }
       }
-    }
-
+//    for(IPluginArena loopArena : arenas) {
+//      for(Player arenaPlayer : loopArena.getPlayers()) {
+//        if(arenaPlayer.getUniqueId().equals(playerUUID)) {
+//          return loopArena;
+//        }
+//      }
+//    }
     return null;
   }
 
   @Override
   @Nullable
   public IPluginArena getArena(String id) {
-    for(IPluginArena loopArena : arenas) {
-      if(loopArena.getId().equalsIgnoreCase(id)) {
-        return loopArena;
-      }
+
+    IPluginArena iPluginArena = arenas.get(id);
+    if (iPluginArena != null){
+      return iPluginArena;
     }
+    for (Map.Entry<String, IPluginArena> entry : arenas.entrySet()) {
+        if (entry.getKey().equalsIgnoreCase(id)) {
+            return entry.getValue();
+        }
+    }
+
     return null;
+//    for(IPluginArena loopArena : arenas) {
+//      if(loopArena.getId().equalsIgnoreCase(id)) {
+//        return loopArena;
+//      }
+//    }
+//    return null;
   }
+
+  public void addArena(IPluginArena arena){
+    arenas.put(arena.getId(),arena);
+  }
+  public void removeArena(IPluginArena arena) {
+    arenas.values().removeIf(value -> value.getId().equals(arena.getId()));
+  }
+
 
   @Override
   public int getArenaPlayersOnline() {
     int players = 0;
-    for(IPluginArena arena : arenas) {
-      players += arena.getPlayers().size();
+    for (Map.Entry<String, IPluginArena> entry : arenas.entrySet()) {
+        IPluginArena value = entry.getValue();
+        Set<Player> arenaPlayers = value.getPlayers();
+        players += arenaPlayers.size();
     }
+//    for(IPluginArena arena : arenas) {
+//      players += arena.getPlayers().size();
+//    }
     return players;
   }
 
   @Override
   public void registerArena(IPluginArena arena) {
     plugin.getDebugger().debug("[{0}] Instance registered", arena.getId());
-    arenas.add(arena);
+    addArena(arena);
     World startWorld = arena.getStartLocation().getWorld();
     World endWorld = arena.getEndLocation().getWorld();
     World lobbyWorld = arena.getLobbyLocation().getWorld();
@@ -182,7 +214,8 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
       new MessageBuilder("COMMANDS_TELEPORTED_TO_LOBBY").asKey().player(player).arena(arena).sendPlayer();
     }
     plugin.getDebugger().debug("[{0}] Instance unregistered", arena.getId());
-    arenas.remove(arena);
+
+    removeArena(arena);
 
     World startWorld = arena.getStartLocation().getWorld();
     World endWorld = arena.getEndLocation().getWorld();
@@ -237,9 +270,12 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
     plugin.getDebugger().debug("[ArenaRegistry] Initial arenas registration");
     long start = System.currentTimeMillis();
     if(!arenas.isEmpty()) {
-      for(IPluginArena arena : new ArrayList<>(arenas)) {
+      for(IPluginArena arena : new ArrayList<>(arenas.values())) {
         unregisterArena(arena);
       }
+//      for(IPluginArena arena : new ArrayList<>(arenas)) {
+//        unregisterArena(arena);
+//      }
     }
     FileConfiguration config = ConfigUtils.getConfig(plugin, "arenas");
     ConfigurationSection section = config.getConfigurationSection("instances");
@@ -260,7 +296,7 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
         continue;
       }
       registerArena(key);
-      roomArenaMapping.put(count, key);
+//      roomArenaMapping.put(count, key);
       count++;
     }
 //    for(String id : section.getKeys(false)) {
@@ -277,12 +313,16 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
     plugin.getDebugger().debug("[ArenaRegistry] Initial arena registration for " + key);
     long start = System.currentTimeMillis();
     if(!arenas.isEmpty()) {
-      List<IPluginArena> sameArenas = arenas.stream().filter(pluginArena -> pluginArena.getId().equals(key)).collect(Collectors.toList());
-      if(!sameArenas.isEmpty()) {
-        for(IPluginArena arena : new ArrayList<>(sameArenas)) {
-          unregisterArena(arena);
+        IPluginArena iPluginArena = arenas.get(key);
+        if(iPluginArena != null) {
+          unregisterArena(iPluginArena);
         }
-      }
+//      List<IPluginArena> sameArenas = arenas.stream().filter(pluginArena -> pluginArena.getId().equals(key)).collect(Collectors.toList());
+//      if(!sameArenas.isEmpty()) {
+//        for(IPluginArena arena : new ArrayList<>(sameArenas)) {
+//          unregisterArena(arena);
+//        }
+//      }
     }
 
     FileConfiguration config = ConfigUtils.getConfig(plugin, "arenas");
@@ -308,6 +348,7 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
       plugin.getDebugger().sendConsoleMsg(new MessageBuilder("VALIDATOR_INSTANCE_STARTED").asKey().arena(arena).build());
     }
 
+    shuffleBungeeArena();
     ConfigUtils.saveConfig(plugin, config, "arenas");
     plugin.getSignManager().loadSigns();
 
@@ -356,7 +397,7 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
   @NotNull
   @Override
   public List<IPluginArena> getArenas() {
-    return new ArrayList<>(arenas);
+    return new ArrayList<>(arenas.values());
   }
 
   @Override
@@ -372,42 +413,70 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
   @Override
   public void shuffleBungeeArena() {
       if(!arenas.isEmpty()) {
-          if (bungeeArena != -999){
-            List<IPluginArena> pluginArenas = plugin.getArenaRegistry().getArenas();
-            IPluginArena iPluginArena = pluginArenas.get(bungeeArena);
-              if ((iPluginArena.getArenaState() != IArenaState.WAITING_FOR_PLAYERS && iPluginArena.getArenaState() != IArenaState.STARTING) || iPluginArena.getPlayers().size() >= iPluginArena.getMaximumPlayers()) {
-                for (int i = 0; i < pluginArenas.size(); i++) {
-                  IPluginArena arena = pluginArenas.get(i);
-                  if ((arena.getArenaState() == IArenaState.WAITING_FOR_PLAYERS || arena.getArenaState() == IArenaState.STARTING) && arena.getPlayers().size() < arena.getMaximumPlayers()){
-                    bungeeArena = i;
-                    break;
+          IPluginArena currentBungeeArena = getCurrentBungeeArena();
+
+          if (currentBungeeArena == null || (currentBungeeArena.getArenaState() != IArenaState.WAITING_FOR_PLAYERS && currentBungeeArena.getArenaState() != IArenaState.STARTING) || currentBungeeArena.getPlayers().size() >= currentBungeeArena.getMaximumPlayers()) {
+              for (IPluginArena value : arenas.values()) {
+                  if ((value.getArenaState() == IArenaState.WAITING_FOR_PLAYERS || value.getArenaState() == IArenaState.STARTING) && value.getPlayers().size() < value.getMaximumPlayers()){
+                      String originalRoomId =  roomId;
+                      roomId = value.getId();
+                      plugin.getLogger().info("随机房间 " + originalRoomId + " -> " + roomId);
+                      break;
                   }
-                }
               }
           }
+
+//          if (!roomId.isEmpty()){
+//            List<IPluginArena> pluginArenas = plugin.getArenaRegistry().getArenas();
+//            IPluginArena iPluginArena = pluginArenas.get(bungeeArena);
+//              if ((iPluginArena.getArenaState() != IArenaState.WAITING_FOR_PLAYERS && iPluginArena.getArenaState() != IArenaState.STARTING) || iPluginArena.getPlayers().size() >= iPluginArena.getMaximumPlayers()) {
+//                for (int i = 0; i < pluginArenas.size(); i++) {
+//                  IPluginArena arena = pluginArenas.get(i);
+//                  if ((arena.getArenaState() == IArenaState.WAITING_FOR_PLAYERS || arena.getArenaState() == IArenaState.STARTING) && arena.getPlayers().size() < arena.getMaximumPlayers()){
+//                    bungeeArena = i;
+//                    break;
+//                  }
+//                }
+//              }
+//          }
       }
   }
 
+
   @Override
-  public int getBungeeArena() {
-    if(bungeeArena == -999 && !arenas.isEmpty()) {
-      bungeeArena = ThreadLocalRandom.current().nextInt(arenas.size());
-    }
-    return bungeeArena;
+  public @Nullable IPluginArena getCurrentBungeeArena(){
+      return arenas.get(roomId);
   }
 
   @Override
-  public void addBungeeArenaMapping(int bungeeId, String arenaId) {
-    roomArenaMapping.put(bungeeId, arenaId);
+  public void setRoomId(String roomId) {
+      this.roomId = roomId;
   }
 
   @Override
-  public String getArenaId(int roomId) {
-    return roomArenaMapping.getArenaId(roomId);
+  public String getRoomId() {
+    return this.roomId;
   }
+  //  @Override
+//  public int getBungeeArena() {
+//    if(bungeeArena == -999 && !arenas.isEmpty()) {
+//      bungeeArena = ThreadLocalRandom.current().nextInt(arenas.size());
+//    }
+//    return bungeeArena;
+//  }
 
-  @Override
-  public int getRoomId(String arenaId) {
-    return roomArenaMapping.getRoomId(arenaId);
-  }
+//  @Override
+//  public void addBungeeArenaMapping(int bungeeId, String arenaId) {
+//    roomArenaMapping.put(bungeeId, arenaId);
+//  }
+
+//  @Override
+//  public String getArenaId(int roomId) {
+//    return roomArenaMapping.getArenaId(roomId);
+//  }
+
+//  @Override
+//  public int getRoomId(String arenaId) {
+//    return roomArenaMapping.getRoomId(arenaId);
+//  }
 }

@@ -51,7 +51,12 @@ public class BungeeEvents implements Listener {
       return;
     }
     IPluginArenaRegistry arenaRegistry = plugin.getArenaRegistry();
-    IPluginArena iPluginArena = arenaRegistry.getArenas().get(arenaRegistry.getBungeeArena());
+//    IPluginArena iPluginArena = arenaRegistry.getArenas().get(arenaRegistry.getBungeeArena());
+    IPluginArena iPluginArena = plugin.getArenaRegistry().getCurrentBungeeArena();
+    if (iPluginArena == null){
+      e.setResult(PlayerLoginEvent.Result.KICK_OTHER);
+      return;
+    }
     if(e.getPlayer().hasPermission(plugin.getPluginNamePrefixLong() +".fullgames")) {
       e.setResult(PlayerLoginEvent.Result.ALLOWED);
     } else if (IArenaState.IN_GAME == iPluginArena.getArenaState() && iPluginArena.getPlayers().size() >= iPluginArena.getMaximumPlayers()) {
@@ -59,7 +64,7 @@ public class BungeeEvents implements Listener {
     }
 
     if(!arenaRegistry.getArenas().isEmpty()) {
-      VersionUtils.teleport(e.getPlayer(), arenaRegistry.getArenas().get(arenaRegistry.getBungeeArena()).getLobbyLocation());
+      VersionUtils.teleport(e.getPlayer(), iPluginArena.getLobbyLocation());
     }
   }
 

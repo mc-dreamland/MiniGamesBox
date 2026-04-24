@@ -38,7 +38,6 @@ import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAcc
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 
 /**
@@ -89,11 +88,17 @@ public class BungeeManager implements Listener {
       ComplementAccessor.getComplement().setMotd(event,new MessageBuilder(motd.get(IArenaState.RESTARTING)).build());
       return;
     }
-    IPluginArena arena = plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena());
-    int reservedSize = plugin.getArenaManager().getReservedSize(arena,null);
+//    IPluginArena arena = plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena());
+    IPluginArena arena = plugin.getArenaRegistry().getCurrentBungeeArena();
+    if (arena == null){
+      ComplementAccessor.getComplement().setMotd(event,new MessageBuilder("服务器房间异常").build());
+      plugin.getArenaRegistry().shuffleBungeeArena();
+      return;
+    }
+    int rejoinSize = plugin.getArenaManager().getRejoinSize(arena,null);
     int maxPlayers = arena.getMaximumPlayers();
     int size = arena.getPlayers().size();
-    if (size + reservedSize >= maxPlayers){
+    if (size + rejoinSize >= maxPlayers){
       ComplementAccessor.getComplement().setMotd(event, new MessageBuilder(motd.get(IArenaState.FULL_GAME)).arena(arena).build());
     }else {
       ComplementAccessor.getComplement().setMotd(event, new MessageBuilder(motd.get(arena.getArenaState())).arena(arena).build());
