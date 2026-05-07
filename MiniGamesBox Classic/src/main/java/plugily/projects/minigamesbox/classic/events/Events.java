@@ -309,7 +309,9 @@ public class Events implements Listener {
     if(!plugin.getArenaRegistry().isInArena((Player) projectile.getShooter())) {
       return;
     }
-    projectile.remove();
+    if (event.getHitBlock() != null) {
+      projectile.remove();
+    }
   }
 
   @EventHandler(priority = EventPriority.HIGH)
