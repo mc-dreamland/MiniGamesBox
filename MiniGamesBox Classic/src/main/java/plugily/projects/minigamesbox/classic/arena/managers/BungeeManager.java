@@ -111,7 +111,7 @@ public class BungeeManager implements Listener {
     ComplementAccessor.getComplement().setJoinMessage(event, "");
     if(!plugin.getArenaRegistry().getArenas().isEmpty()) {
       Player player = event.getPlayer();
-      plugin.getServer().getScheduler().runTaskLater(plugin, () -> plugin.getArenaManager().joinAttempt(player),getPartyTick());
+      plugin.getServer().getScheduler().runTaskLater(plugin, () -> plugin.getArenaManager().joinAttempt(player),isPartyJoinEnabled()?getPartyTick():0);
 //      int rejoinArenaId = isRejoinEnabled() ? plugin.getArenaManager().getRejoinArenaId(player) : -1;
 //      IPluginArena arena;
 //      if (plugin.getArenaManager().getRejoinArenaId(player) == -1){
@@ -147,7 +147,7 @@ public class BungeeManager implements Listener {
   }
 
   public int getPartyTick(){
-    return config.getInt("Party.Tick", 30);
+    return config.getInt("Party.Tick", 1);
   }
 
   public boolean isRejoinEnabled(){

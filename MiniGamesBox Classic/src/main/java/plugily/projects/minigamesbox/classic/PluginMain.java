@@ -44,6 +44,7 @@ import plugily.projects.minigamesbox.classic.events.bungee.BungeeEvents;
 import plugily.projects.minigamesbox.classic.events.spectator.SpectatorEvents;
 import plugily.projects.minigamesbox.classic.events.spectator.SpectatorItemsManager;
 import plugily.projects.minigamesbox.classic.handlers.chat.ChatManager;
+import plugily.projects.minigamesbox.classic.handlers.gamerule.GameRuleManager;
 import plugily.projects.minigamesbox.classic.handlers.holiday.HolidayManager;
 import plugily.projects.minigamesbox.classic.handlers.hologram.LeaderboardRegistry;
 import plugily.projects.minigamesbox.classic.handlers.items.SpecialItemEvent;
@@ -144,6 +145,8 @@ public class PluginMain extends JavaPlugin implements IPluginMain {
   private Metrics metrics;
   private SpectatorItemsManager spectatorItemsManager;
   private final Random random = new Random();
+
+  private GameRuleManager gameRuleManager;
 
   @TestOnly
   public PluginMain() {
@@ -274,6 +277,7 @@ public class PluginMain extends JavaPlugin implements IPluginMain {
     arenaOptionManager = new ArenaOptionManager(this);
 
     signManager = new SignManager(this);
+    gameRuleManager = new GameRuleManager(this);
 
     PluginArenaUtils.init(this);
     PluginArena.init(this);

@@ -197,6 +197,7 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
     if(startWorld != null) {
       arenaIngameWorlds.add(startWorld);
       arenaWorlds.add(startWorld);
+      loadGameRule(arena);
     }
     if(endWorld != null) {
       arenaWorlds.add(endWorld);
@@ -353,6 +354,9 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
     plugin.getSignManager().loadSigns();
 
     plugin.getDebugger().debug("[ArenaRegistry] Arena registration for " + key + " completed took {0}ms", System.currentTimeMillis() - start);
+  }
+  public void loadGameRule(IPluginArena arena) {
+    plugin.getGameRuleManager().loadGameRule(arena);
   }
 
   public boolean additionalValidatorChecks(ConfigurationSection section, PluginArena arena, String id) {

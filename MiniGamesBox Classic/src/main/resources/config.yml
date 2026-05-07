@@ -186,6 +186,9 @@ Cycle:
     Enable: false
     Time: 10000
 
+GameRule:
+  doImmediateRespawn: true
+
 
 # How many seconds game should take to start.
 Time-Manager:
