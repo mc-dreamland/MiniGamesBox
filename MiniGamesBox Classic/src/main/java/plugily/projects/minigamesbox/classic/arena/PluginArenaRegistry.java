@@ -291,7 +291,7 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
     Collections.shuffle(list);
     for (String key : list) {
       if (count>=amount){
-        return;
+        break;
       }
       if(key.equalsIgnoreCase("default")) {
         continue;
@@ -300,6 +300,9 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
 //      roomArenaMapping.put(count, key);
       count++;
     }
+
+    plugin.getLogger().info("一共注册arena:"+ arenas.size());
+
 //    for(String id : section.getKeys(false)) {
 //      if(id.equalsIgnoreCase("default")) {
 //        continue;
@@ -340,8 +343,6 @@ public class PluginArenaRegistry implements IPluginArenaRegistry {
 
     if(!validatorChecks(section, arena, key) || !additionalValidatorChecks(section, arena, key)) {
       section.set(key + ".isdone", false);
-      ConfigUtils.saveConfig(plugin, config, "arenas");
-      registerArena(arena);
     } else {
       arena.setReady(true);
       registerArena(arena);
