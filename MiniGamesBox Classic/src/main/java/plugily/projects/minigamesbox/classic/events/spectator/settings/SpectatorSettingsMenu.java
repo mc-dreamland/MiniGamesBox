@@ -27,7 +27,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import plugily.projects.minigamesbox.api.arena.IPluginArena;
@@ -56,23 +55,27 @@ public class SpectatorSettingsMenu implements Listener {
   private final PluginMain plugin;
   private final NormalFastInv inventory;
   private final FileConfiguration config;
-  public List<SpectatorSettingsItem> settingsItems = new ArrayList<>();
-  public List<Player> firstPersonMode = new ArrayList<>();
-  public List<Player> autoTeleport = new ArrayList<>();
-  public Map<Player, Player> targetPlayer = new HashMap<>();
-  public List<Player> invisibleSpectators = new ArrayList<>();
+  private final List<SpectatorSettingsItem> settingsItems = new ArrayList<>();
+  private final Set<UUID> firstPersonMode = new HashSet<>();
+  private final Set<UUID> autoTeleport = new HashSet<>();
+  private final Map<UUID, UUID> targetPlayer = new HashMap<>();
+  private final Set<UUID> invisibleSpectators = new HashSet<>();
 
   @EventHandler
   public void onQuit(PlayerQuitEvent event) {
     plugin.getSpectatorItemsManager().getSpectatorSettingsMenu().clearPlayer(event.getPlayer());
   }
 
-  public void clearPlayer(Player player){
-    firstPersonMode.remove(player);
-    autoTeleport.remove(player);
-    targetPlayer.remove(player);
-    targetPlayer.entrySet().removeIf(entry -> entry.getValue().equals(player));
-    invisibleSpectators.remove(player);
+  public void clearPlayer(Player player) {
+    clearPlayer(player.getUniqueId());
+  }
+
+  private void clearPlayer(UUID playerId) {
+    firstPersonMode.remove(playerId);
+    autoTeleport.remove(playerId);
+    targetPlayer.remove(playerId);
+    targetPlayer.entrySet().removeIf(entry -> entry.getValue().equals(playerId));
+    invisibleSpectators.remove(playerId);
   }
 
 
@@ -82,6 +85,7 @@ public class SpectatorSettingsMenu implements Listener {
     loadSpectatorSettingsItems();
     inventory = setupSpectatorSettings();
     plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    plugin.getServer().getScheduler().runTaskTimer(plugin, this::tickSpectatorSettings, 20L, 20L);
   }
 
   private void loadSpectatorSettingsItems() {
@@ -156,11 +160,11 @@ public class SpectatorSettingsMenu implements Listener {
             XPotion.SPEED.buildPotionEffect(Integer.MAX_VALUE, 4).apply(player);
             break;
           case AUTO_TELEPORT:
-            if(autoTeleport.contains(player)) {
-              autoTeleport.remove(player);
+            if(autoTeleport.contains(player.getUniqueId())) {
+              autoTeleport.remove(player.getUniqueId());
               new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_MENU_SETTINGS_AUTO_TELEPORT").asKey().arena(arena).value(new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_MENU_SETTINGS_STATUS_DISABLED").asKey().build()).player(player).sendPlayer();
             } else {
-              autoTeleport.add(player);
+              autoTeleport.add(player.getUniqueId());
               new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_MENU_SETTINGS_AUTO_TELEPORT").asKey().arena(arena).value(new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_MENU_SETTINGS_STATUS_ENABLED").asKey().build()).player(player).sendPlayer();
             }
             break;
@@ -174,27 +178,32 @@ public class SpectatorSettingsMenu implements Listener {
             }
             break;
           case FIRST_PERSON_MODE:
-            if(!targetPlayer.containsKey(player)) {
+            if(!targetPlayer.containsKey(player.getUniqueId())) {
               return;
             }
-            autoTeleport.remove(player);
-            firstPersonMode.add(player);
+            autoTeleport.remove(player.getUniqueId());
+            firstPersonMode.add(player.getUniqueId());
             VersionUtils.sendTitle(player, new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_MENU_SETTINGS_FIRST_PERSON_MODE_TITLE").asKey().player(player).arena(arena).build(), 5, 20, 5);
-            Player target = targetPlayer.get(player);
+            Player target = getValidTarget(player, arena);
+            if(target == null) {
+              targetPlayer.remove(player.getUniqueId());
+              firstPersonMode.remove(player.getUniqueId());
+              return;
+            }
             player.setGameMode(GameMode.SPECTATOR);
             player.setSpectatorTarget(target);
             break;
           case SPECTATORS_VISIBILITY:
-            if(invisibleSpectators.contains(player)) {
-              invisibleSpectators.remove(player);
+            if(invisibleSpectators.contains(player.getUniqueId())) {
+              invisibleSpectators.remove(player.getUniqueId());
               for(Player players : arena.getPlayers()) {
                 VersionUtils.showPlayer(plugin, player, players);
               }
               new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_MENU_SETTINGS_VISIBILITY").asKey().arena(arena).value(new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_MENU_SETTINGS_STATUS_ENABLED").asKey().build()).player(player).sendPlayer();
             } else {
-              invisibleSpectators.add(player);
+              invisibleSpectators.add(player.getUniqueId());
               for(Player players : arena.getPlayers()) {
-                if(!plugin.getUserManager().getUser(player).isSpectator()) {
+                if(!plugin.getUserManager().getUser(players).isSpectator()) {
                   continue;
                 }
                 VersionUtils.hidePlayer(plugin, player, players);
@@ -211,36 +220,70 @@ public class SpectatorSettingsMenu implements Listener {
     return gui;
   }
 
-  @EventHandler
-  public void onPlayerMovement(PlayerMoveEvent event) {
-    Player player = event.getPlayer();
-    IUser user = plugin.getUserManager().getUser(player);
-    if(user.getArena() != null) {
-      firstPersonMode.forEach(spectator -> {
-        if(spectator.getSpectatorTarget() instanceof Player) {
-          plugin.getActionBarManager().addActionBar(spectator, new ActionBar(new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_MENU_SETTINGS_FIRST_PERSON_MODE_ACTION_BAR").asKey().arena(user.getArena()).player((Player) spectator.getSpectatorTarget()), ActionBar.ActionBarType.DISPLAY));
+  private void tickSpectatorSettings() {
+    Set<UUID> trackedPlayers = new HashSet<>();
+    trackedPlayers.addAll(firstPersonMode);
+    trackedPlayers.addAll(autoTeleport);
+    trackedPlayers.addAll(targetPlayer.keySet());
+    trackedPlayers.addAll(invisibleSpectators);
+
+    for(UUID playerId : trackedPlayers) {
+      Player player = plugin.getServer().getPlayer(playerId);
+      if(player == null || !player.isOnline()) {
+        clearPlayer(playerId);
+        continue;
+      }
+      IUser user = plugin.getUserManager().getUser(player);
+      IPluginArena arena = user.getArena();
+      if(arena == null || !user.isSpectator()) {
+        clearPlayer(playerId);
+        continue;
+      }
+
+      Player target = getValidTarget(player, arena);
+      if(target == null) {
+        targetPlayer.remove(playerId);
+        firstPersonMode.remove(playerId);
+        autoTeleport.remove(playerId);
+        continue;
+      }
+
+      if(firstPersonMode.contains(playerId)) {
+        if(!target.equals(player.getSpectatorTarget())) {
+          firstPersonMode.remove(playerId);
+        } else {
+          plugin.getActionBarManager().addActionBar(player, new ActionBar(new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_MENU_SETTINGS_FIRST_PERSON_MODE_ACTION_BAR").asKey().arena(arena).player(target), ActionBar.ActionBarType.DISPLAY));
+          continue;
         }
-      });
+      }
+
+      if(player.getLocation().getWorld() != target.getLocation().getWorld()) {
+        continue;
+      }
+      double distance = player.getLocation().distance(target.getLocation());
+      plugin.getActionBarManager().addActionBar(player, new ActionBar(new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_MENU_SETTINGS_TARGET_PLAYER_ACTION_BAR").asKey().arena(arena).integer((int) distance).player(target), ActionBar.ActionBarType.DISPLAY));
+      if(distance > 15 && autoTeleport.contains(playerId)) {
+        VersionUtils.teleport(player, target.getLocation());
+      }
     }
-    if(!user.isSpectator()) {
-      return;
+  }
+
+  private Player getValidTarget(Player player, IPluginArena arena) {
+    UUID targetId = targetPlayer.get(player.getUniqueId());
+    if(targetId == null) {
+      return null;
     }
-    if(!targetPlayer.containsKey(player)) {
-      return;
+    Player target = plugin.getServer().getPlayer(targetId);
+    if(target == null || !target.isOnline()) {
+      return null;
     }
-    Player target = targetPlayer.get(player);
-    if(player.getLocation().getWorld() != target.getLocation().getWorld()) {
-      //Fix Cannot measure distance between worlds
-      return;
+    if(!arena.equals(plugin.getArenaRegistry().getArena(target))) {
+      return null;
     }
-    double distance = player.getLocation().distance(target.getLocation());
-    plugin.getActionBarManager().addActionBar(player, new ActionBar(new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_MENU_SETTINGS_TARGET_PLAYER_ACTION_BAR").asKey().arena(user.getArena()).integer((int) distance).player(target), ActionBar.ActionBarType.DISPLAY));
-    if(distance <= 15) {
-      return;
+    if(plugin.getUserManager().getUser(target).isSpectator()) {
+      return null;
     }
-    if(autoTeleport.contains(player)) {
-      VersionUtils.teleport(player, target.getLocation());
-    }
+    return target;
   }
 
   @EventHandler
@@ -256,9 +299,13 @@ public class SpectatorSettingsMenu implements Listener {
     if(!plugin.getArenaRegistry().isInArena(target)) {
       return;
     }
-    targetPlayer.remove(player);
-    targetPlayer.put(player, target);
-    if(!autoTeleport.contains(player)) {
+    IPluginArena arena = plugin.getArenaRegistry().getArena(player);
+    if(arena == null || !arena.equals(plugin.getArenaRegistry().getArena(target))) {
+      return;
+    }
+    targetPlayer.put(player.getUniqueId(), target.getUniqueId());
+    if(!autoTeleport.contains(player.getUniqueId())) {
+      firstPersonMode.add(player.getUniqueId());
       VersionUtils.sendTitle(player, new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_MENU_SETTINGS_FIRST_PERSON_MODE_TITLE").asKey().player(player).build(), 5, 20, 5);
       player.setGameMode(GameMode.SPECTATOR);
       player.setSpectatorTarget(target);
@@ -274,7 +321,7 @@ public class SpectatorSettingsMenu implements Listener {
     if(!(player.getSpectatorTarget() instanceof Player)) {
       return;
     }
-    firstPersonMode.remove(player);
+    firstPersonMode.remove(player.getUniqueId());
     player.setSpectatorTarget(null);
     player.setGameMode(GameMode.SURVIVAL);
     player.setAllowFlight(true);
