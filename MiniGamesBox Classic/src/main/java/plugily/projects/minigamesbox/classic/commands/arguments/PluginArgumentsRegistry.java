@@ -70,11 +70,11 @@ public class PluginArgumentsRegistry implements CommandExecutor {
     });
 
     //register basic arguments
-    new SetupArgument(this);
+//    new SetupArgument(this);
     new JoinArguments(this);
     new ArenaSelectorArgument(this);
-    new LeaderboardArgument(this);
-    new LeaveArgument(this);
+//    new LeaderboardArgument(this);
+//    new LeaveArgument(this);
     if(plugin.getConfigPreferences().getOption("KITS")) {
       new SelectKitArgument(this);
     }
@@ -82,25 +82,25 @@ public class PluginArgumentsRegistry implements CommandExecutor {
 
     //register admin arguments
     //arena related arguments
-    new DeleteArgument(this);
+//    new DeleteArgument(this);
     new ForceStartArgument(this);
-    new ReloadArgument(this);
-    new StopArgument(this);
+//    new ReloadArgument(this);
+//    new StopArgument(this);
 
     //player statistic related arguments
     new AdjustStatisticArgument(this);
 
     //other admin related arguments
     new ListArenasArgument(this);
-    new LocationWandArgument(this);
-    new PlaceholderCheckArgument(this);
-    new LocalesArgument(this);
-    new LocaleArgument(this);
+//    new LocationWandArgument(this);
+//    new PlaceholderCheckArgument(this);
+//    new LocalesArgument(this);
+//    new LocaleArgument(this);
     spyChat = new SpyChatArgument(this);
-    new TeleportArgument(this);
-    if(plugin.getConfigPreferences().getOption("LEADERBOARDS")) {
-      new HologramArgument(this);
-    }
+//    new TeleportArgument(this);
+//    if(plugin.getConfigPreferences().getOption("LEADERBOARDS")) {
+//      new HologramArgument(this);
+//    }
   }
 
   @Override
