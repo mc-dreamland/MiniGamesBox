@@ -157,6 +157,8 @@ public class PluginMain extends JavaPlugin implements IPluginMain {
   public void onEnable() {
     long start = System.currentTimeMillis();
 
+    int a = 1; //测试代码
+
     //run file creation
     saveDefaultConfig();
 

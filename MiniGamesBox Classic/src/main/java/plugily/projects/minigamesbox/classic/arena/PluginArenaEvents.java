@@ -28,6 +28,8 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
 import plugily.projects.minigamesbox.api.arena.IPluginArena;
+import plugily.projects.minigamesbox.api.events.game.PlugilyGamePlayerStartEvent;
+import plugily.projects.minigamesbox.api.events.game.PlugilyGameStartEvent;
 import plugily.projects.minigamesbox.api.preferences.ICommandShorter;
 import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
@@ -114,6 +116,14 @@ public class PluginArenaEvents implements Listener {
     if (!plugin.getConfigPreferences().getOption("HUNGER_LOSE")) {
       event.setCancelled(true);
       event.setFoodLevel(20);
+    }
+  }
+
+  @EventHandler
+  public void onPluginArenaJoin(PlugilyGameStartEvent event) {
+    IPluginArena arena = event.getArena();
+    for (Player p : arena.getPlayers()) {
+      new PlugilyGamePlayerStartEvent(p, arena).callEvent();
     }
   }
 

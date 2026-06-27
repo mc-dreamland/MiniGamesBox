@@ -31,6 +31,7 @@ import plugily.projects.minigamesbox.api.arena.IPluginArena;
 import plugily.projects.minigamesbox.api.arena.IPluginArenaRegistry;
 import plugily.projects.minigamesbox.api.events.game.PlugilyGameJoinAttemptEvent;
 import plugily.projects.minigamesbox.api.events.game.PlugilyGameLeaveAttemptEvent;
+import plugily.projects.minigamesbox.api.events.game.PlugilyGamePlayerStartEvent;
 import plugily.projects.minigamesbox.api.events.game.PlugilyGameStopEvent;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.PluginMain;
@@ -325,6 +326,7 @@ public class PluginArenaManager {
 
   public void onRejoinComplete(Player player, IPluginArena arena) {
     plugin.getLogger().info("重连加入:" + player.getName() + " -> " + arena.getId());
+    new PlugilyGamePlayerStartEvent(player, arena).callEvent();
   }
 
   public void onNormalJoinComplete(Player player, IPluginArena arena) {
