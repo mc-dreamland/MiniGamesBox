@@ -119,13 +119,6 @@ public class PluginArenaEvents implements Listener {
     }
   }
 
-  @EventHandler
-  public void onPluginArenaJoin(PlugilyGameStartEvent event) {
-    IPluginArena arena = event.getArena();
-    for (Player p : arena.getPlayers()) {
-      new PlugilyGamePlayerStartEvent(p, arena).callEvent();
-    }
-  }
 
   public boolean additionalFallDamageRules(Player victim, IPluginArena arena, EntityDamageEvent event) {
     return false;

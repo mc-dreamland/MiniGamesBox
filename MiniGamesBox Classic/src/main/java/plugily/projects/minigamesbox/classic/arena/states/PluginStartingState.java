@@ -22,6 +22,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
+import plugily.projects.minigamesbox.api.events.game.PlugilyGamePlayerStartEvent;
 import plugily.projects.minigamesbox.api.events.game.PlugilyGameStartEvent;
 import plugily.projects.minigamesbox.api.user.IUser;
 import plugily.projects.minigamesbox.classic.PluginMain;
@@ -104,7 +105,10 @@ public class PluginStartingState implements ArenaStateHandler {
       org.bukkit.Location arenaLoc = arena.getStartLocation();
       for(Player player : arena.getPlayers()) {
         VersionUtils.teleport(player, arenaLoc).thenAccept(bol -> {
-        PluginArenaUtils.hidePlayersOutsideTheGame(player, arena);
+        if(!bol) {
+          return;
+        }
+        new PlugilyGamePlayerStartEvent(player, arena).callEvent();
         player.setExp(0);
         player.setLevel(0);
         player.getInventory().clear();
@@ -119,6 +123,7 @@ public class PluginStartingState implements ArenaStateHandler {
         plugin.getSpecialItemManager().addSpecialItemsOfStage(player, SpecialItem.DisplayStage.IN_GAME);
         plugin.getRewardsHandler().performReward(player, arena, plugin.getRewardsHandler().getRewardType("START_GAME"));
         plugin.getUserManager().addStat(user, plugin.getStatsStorage().getStatisticType("GAMES_PLAYED"));
+        PluginArenaUtils.hidePlayersOutsideTheGame(player, arena);
         });
       }
       arenaTimer = plugin.getConfig().getInt("Time-Manager.In-Game", 270);
