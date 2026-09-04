@@ -29,9 +29,13 @@ import plugily.projects.minigamesbox.classic.utils.configuration.ConfigUtils;
 import plugily.projects.minigamesbox.database.MysqlDatabase;
 import plugily.projects.minigamesbox.sorter.SortUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 /**
@@ -42,16 +46,28 @@ import java.util.logging.Level;
 public class FileStats implements UserDatabase {
 
   private final PluginMain plugin;
+  private final ExecutorService saveExecutor;
+  private final Object statsFileLock = new Object();
 
   public FileStats(PluginMain plugin) {
     this.plugin = plugin;
+    this.saveExecutor = Executors.newSingleThreadExecutor(runnable -> {
+      Thread thread = new Thread(runnable, "MiniGamesBox-FileStats-Save");
+      thread.setDaemon(true);
+      return thread;
+    });
   }
 
   @Override
   public void saveStatistic(IUser user, IStatisticType stat) {
-    FileConfiguration config = ConfigUtils.getConfig(plugin, "stats");
-    config.set(user.getUniqueId().toString() + "." + stat.getName(), user.getStatistic(stat));
-    ConfigUtils.saveConfig(plugin, config, "stats");
+    String uuid = user.getUniqueId().toString();
+    String statisticName = stat.getName();
+    long value = user.getStatistic(stat);
+    saveAsync(() -> {
+      FileConfiguration config = ConfigUtils.getConfig(plugin, "stats");
+      config.set(uuid + "." + statisticName, value);
+      ConfigUtils.saveConfig(plugin, config, "stats");
+    });
   }
 
   @Override
@@ -62,7 +78,11 @@ public class FileStats implements UserDatabase {
   @Override
   public void loadStatistics(IUser user) {
     String uuid = user.getUniqueId().toString();
-    plugin.getStatsStorage().getStatistics().forEach((s, statisticType) -> user.setStatistic(statisticType, ConfigUtils.getConfig(plugin, "stats").getInt(uuid + "." + statisticType.getName())));
+    synchronized(statsFileLock) {
+      FileConfiguration config = ConfigUtils.getConfig(plugin, "stats");
+      plugin.getStatsStorage().getStatistics().forEach((s, statisticType) ->
+          user.setStatistic(statisticType, config.getInt(uuid + "." + statisticType.getName())));
+    }
   }
 
   @Override
@@ -79,15 +99,17 @@ public class FileStats implements UserDatabase {
   @Override
   public Map<UUID, Long> getStats(IStatisticType stat) {
     Map<UUID, Integer> stats = new TreeMap<>();
-    FileConfiguration config = ConfigUtils.getConfig(plugin, "stats");
-    for(String string : config.getKeys(false)) {
-      if(string.equals("data-version")) {
-        continue;
-      }
-      try {
-        stats.put(UUID.fromString(string), config.getInt(string + "." + stat.getName()));
-      } catch(IllegalArgumentException ex) {
-        plugin.getLogger().log(Level.WARNING, "Cannot load the UUID for {0}", string);
+    synchronized(statsFileLock) {
+      FileConfiguration config = ConfigUtils.getConfig(plugin, "stats");
+      for(String string : config.getKeys(false)) {
+        if(string.equals("data-version")) {
+          continue;
+        }
+        try {
+          stats.put(UUID.fromString(string), config.getInt(string + "." + stat.getName()));
+        } catch(IllegalArgumentException ex) {
+          plugin.getLogger().log(Level.WARNING, "Cannot load the UUID for {0}", string);
+        }
       }
     }
     return SortUtils.sortByValue(stats);
@@ -98,6 +120,15 @@ public class FileStats implements UserDatabase {
     for(Player player : plugin.getServer().getOnlinePlayers()) {
       updateStats(plugin.getUserManager().getUser(player));
     }
+    saveExecutor.shutdown();
+    try {
+      if(!saveExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
+        plugin.getLogger().warning("Timed out while saving player statistics.");
+      }
+    } catch(InterruptedException exception) {
+      Thread.currentThread().interrupt();
+      plugin.getLogger().warning("Interrupted while saving player statistics.");
+    }
   }
 
   @Override
@@ -107,24 +138,40 @@ public class FileStats implements UserDatabase {
 
   @Override
   public String getPlayerName(UUID uuid) {
-    return ConfigUtils.getConfig(plugin, "stats").getString(uuid + ".playername", Bukkit.getOfflinePlayer(uuid).getName());
+    synchronized(statsFileLock) {
+      return ConfigUtils.getConfig(plugin, "stats").getString(uuid + ".playername", Bukkit.getOfflinePlayer(uuid).getName());
+    }
   }
 
   private void updateStats(IUser user) {
     String uuid = user.getUniqueId().toString();
-    FileConfiguration config = ConfigUtils.getConfig(plugin, "stats");
+    Map<String, Long> statistics = new HashMap<>();
     plugin.getStatsStorage().getStatistics().forEach((s, statisticType) -> {
       if(statisticType.isPersistent()) {
-        String path = uuid + "." + statisticType.getName();
-        long value = user.getStatistic(statisticType);
+        statistics.put(statisticType.getName(), user.getStatistic(statisticType));
+      }
+    });
+    String playerName = user.getPlayer() == null ? null : user.getPlayer().getName();
+    saveAsync(() -> {
+      FileConfiguration config = ConfigUtils.getConfig(plugin, "stats");
+      statistics.forEach((statisticName, value) -> {
+        String path = uuid + "." + statisticName;
         if(value > 0 || config.contains(path)) {
           config.set(path, value);
         }
+      });
+      if(playerName != null) {
+        config.set(uuid + ".playername", playerName);
+      }
+      ConfigUtils.saveConfig(plugin, config, "stats");
+    });
+  }
+
+  private void saveAsync(Runnable saveTask) {
+    saveExecutor.execute(() -> {
+      synchronized(statsFileLock) {
+        saveTask.run();
       }
     });
-    if(user.getPlayer() != null) {
-      config.set(uuid + ".playername", user.getPlayer().getName());
-    }
-    ConfigUtils.saveConfig(plugin, config, "stats");
   }
 }
