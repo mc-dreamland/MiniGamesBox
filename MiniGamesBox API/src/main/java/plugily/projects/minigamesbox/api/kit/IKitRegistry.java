@@ -1,5 +1,8 @@
 package plugily.projects.minigamesbox.api.kit;
 
+import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.ItemStack;
+
 import java.util.List;
 
 /**
@@ -23,6 +26,8 @@ public interface IKitRegistry {
    */
   void registerKits(List<String> optionalConfigurations);
 
+  boolean hasItemTag(ItemStack itemStack, String tag);
+
   /**
    * Return default game kit
    *
@@ -43,6 +48,8 @@ public interface IKitRegistry {
    * @param defaultKitName name of the default kit
    */
   void setDefaultKit(String defaultKitName);
+
+  NamespacedKey getKitItemTagKey();
 
   /**
    * Returns all available kits

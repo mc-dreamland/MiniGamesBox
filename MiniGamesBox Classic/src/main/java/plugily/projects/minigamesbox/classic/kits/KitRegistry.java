@@ -20,9 +20,12 @@ package plugily.projects.minigamesbox.classic.kits;
 
 import com.cryptomorin.xseries.XItemStack;
 import com.cryptomorin.xseries.XMaterial;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import plugily.projects.minigamesbox.api.kit.HandleItem;
 import plugily.projects.minigamesbox.api.kit.IKit;
 import plugily.projects.minigamesbox.api.kit.IKitRegistry;
@@ -50,10 +53,12 @@ public class KitRegistry implements IKitRegistry {
   private static HandleItem handleItem;
   public final List<IKit> kits = new java.util.ArrayList<>();
   public final PluginMain plugin;
+  private final NamespacedKey kitItemTagKey;
   private IKit defaultKit;
 
   public KitRegistry(PluginMain plugin) {
     this.plugin = plugin;
+    this.kitItemTagKey = new NamespacedKey(plugin, "kit_item_tag");
   }
 
   @Override
@@ -187,7 +192,7 @@ public class KitRegistry implements IKitRegistry {
 
         ConfigurationSection itemStackConfigurationSection = itemConfigurationSection.getConfigurationSection("item");
         assert itemStackConfigurationSection != null;
-        ItemStack item = XItemStack.deserialize(itemStackConfigurationSection);
+        ItemStack item = deserializeTaggedItem(itemStackConfigurationSection);
         Integer slot = itemConfigurationSection.getInt("slot");
 
         kitItems.put(item, slot);
@@ -204,22 +209,26 @@ public class KitRegistry implements IKitRegistry {
 
       ConfigurationSection helmetConfigurationSection = armourConfigurationSection.getConfigurationSection("helmet");
       if (helmetConfigurationSection != null) {
-        kit.setKitHelmet(XItemStack.deserialize(helmetConfigurationSection));
+        ItemStack item = deserializeTaggedItem(helmetConfigurationSection);
+        kit.setKitHelmet(item);
       }
 
       ConfigurationSection chestplateConfigurationSection = armourConfigurationSection.getConfigurationSection("chestplate");
       if (chestplateConfigurationSection != null) {
-        kit.setKitChestplate(XItemStack.deserialize(chestplateConfigurationSection));
+        ItemStack item = deserializeTaggedItem(chestplateConfigurationSection);
+        kit.setKitChestplate(item);
       }
 
       ConfigurationSection leggingsConfigurationSection = armourConfigurationSection.getConfigurationSection("leggings");
       if (leggingsConfigurationSection != null) {
-        kit.setKitLeggings(XItemStack.deserialize(leggingsConfigurationSection));
+        ItemStack item = deserializeTaggedItem(leggingsConfigurationSection);
+        kit.setKitLeggings(item);
       }
 
       ConfigurationSection bootsConfigurationSection = armourConfigurationSection.getConfigurationSection("boots");
       if (bootsConfigurationSection != null) {
-        kit.setKitBoots(XItemStack.deserialize(bootsConfigurationSection));
+        ItemStack item = deserializeTaggedItem(bootsConfigurationSection);
+        kit.setKitBoots(item);
       }
     } else {
       plugin.getDebugger().debug(Level.SEVERE, "The kit " + kit.getKitFileName() + " does not have an armour configuration section.");
@@ -240,6 +249,40 @@ public class KitRegistry implements IKitRegistry {
 
     plugin.getDebugger().debug("Kit " + kit.getKitFileName() + " loaded.");
     kits.add(kit);
+  }
+
+  private ItemStack deserializeTaggedItem(ConfigurationSection itemConfigurationSection) {
+    ItemStack item = XItemStack.deserialize(itemConfigurationSection);
+    if (item == null) {
+      return null;
+    }
+    List<String> tags;
+    if (itemConfigurationSection.isList("tag")) {
+      tags = itemConfigurationSection.getStringList("tag").stream().map(String::trim).filter(value -> !value.isEmpty()).toList();
+    } else {
+      String tag = itemConfigurationSection.getString("tag", "").trim();
+      tags = tag.isEmpty() ? List.of() : List.of(tag);
+    }
+
+    if (!tags.isEmpty()) {
+      ItemMeta meta = item.getItemMeta();
+      if (meta != null) {
+        meta.getPersistentDataContainer().set(kitItemTagKey, PersistentDataType.LIST.strings(), tags);
+        item.setItemMeta(meta);
+      }
+    }
+
+    return item;
+  }
+
+  @Override
+  public boolean hasItemTag(ItemStack itemStack, String tag) {
+    if (itemStack == null || itemStack.getType().isAir() || !itemStack.hasItemMeta() || tag == null || tag.isBlank()) {
+      return false;
+    }
+
+    List<String> tags = itemStack.getItemMeta().getPersistentDataContainer().get(kitItemTagKey, PersistentDataType.LIST.strings());
+    return tags != null && tags.contains(tag);
   }
 
   @Override
@@ -281,6 +324,10 @@ public class KitRegistry implements IKitRegistry {
     this.defaultKit = defaultKit.get();
   }
 
+  @Override
+  public NamespacedKey getKitItemTagKey() {
+    return kitItemTagKey;
+  }
 
   @Override
   public List<IKit> getKits() {
