@@ -38,10 +38,15 @@ import plugily.projects.minigamesbox.classic.kits.free.EmptyKit;
 import plugily.projects.minigamesbox.classic.utils.configuration.ConfigUtils;
 
 import java.io.File;
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Tigerpanzer_02
@@ -110,6 +115,19 @@ public class KitRegistry implements IKitRegistry {
         plugin.onDisable();
         return;
       }
+
+      Pattern numberPrefix = Pattern.compile("^[0-9]+");
+      Arrays.sort(kitsFiles, Comparator
+              .<File, BigInteger>comparing(
+                      file -> {
+                        Matcher matcher = numberPrefix.matcher(file.getName());
+                        return matcher.find()
+                                ? new BigInteger(matcher.group())
+                                : null;
+                      },
+                      Comparator.nullsLast(Comparator.naturalOrder()))
+              .thenComparing(File::getName));
+
       for (File file : kitsFiles) {
         String kitFileName = ConfigUtils.removeExtension(file.getName());
         plugin.getDebugger().debug(Level.INFO, "Trying to load " + kitFileName);
